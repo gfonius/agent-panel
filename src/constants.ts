@@ -1,0 +1,14 @@
+export const PANEL_VIEW_TYPE = 'claudePanel';
+export const COMMAND_OPEN = 'claudePanel.open';
+export const COMMAND_NEW_TERMINAL = 'claudePanel.newTerminal';
+export const COMMAND_CLOSE_TERMINAL = 'claudePanel.closeTerminal';
+export const COMMAND_FOCUS_NEXT = 'claudePanel.focusNext';
+export const COMMAND_FOCUS_PREV = 'claudePanel.focusPrev';
+export const COMMAND_FOCUS_UP = 'claudePanel.focusUp';
+export const COMMAND_FOCUS_DOWN = 'claudePanel.focusDown';
+export const COMMAND_FOCUS_LEFT = 'claudePanel.focusLeft';
+export const COMMAND_FOCUS_RIGHT = 'claudePanel.focusRight';
+export const COMMAND_OPEN_VSCODE_TERMINAL = 'claudePanel.openVscodeTerminal';
+export const EXTENSION_ID = 'claude-panel';
+export const SESSION_STORAGE_KEY = 'claudePanel.sessions';
+export const RATE_LIMIT_CACHE_TTL = 60_000; // 60秒
