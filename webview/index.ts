@@ -5,6 +5,8 @@ import { TerminalPane } from './TerminalPane';
 import { TerminalGrid } from './TerminalGrid';
 import { KeyboardHandler } from './KeyboardHandler';
 import { RateLimitBar } from './RateLimitBar';
+import { ShortcutGuide } from './ShortcutGuide';
+import { setLocale as setI18nLocale } from './i18n';
 import { reorderPaneIds } from './paneOrderUtils';
 import { uriToPath, quotePath } from './fileDropUtils';
 import type { HostToWebviewMessage, WebviewToHostMessage } from '../src/protocol/messages';
@@ -32,6 +34,7 @@ const baseScreen = new BaseScreen(app, openFolder);
 const panes = new Map<string, TerminalPane>();
 let paneOrder: string[] = []; // ペインの表示順序（挿入順に依存しない独立管理）
 const grid = new TerminalGrid(terminalContainer);
+const shortcutGuide = new ShortcutGuide(app);
 const rateLimitBar = new RateLimitBar(app, openFolder);
 
 let focusedPaneId: string | null = null;
@@ -194,6 +197,13 @@ window.addEventListener('message', (event: MessageEvent<HostToWebviewMessage>) =
       if (focusedPaneId) {
         postMessage({ type: 'terminalInput', terminalId: focusedPaneId, data: '\x1b\x7f' });
       }
+      break;
+    }
+    case 'setLocale': {
+      setI18nLocale(msg.locale);
+      baseScreen.updateLocale();
+      shortcutGuide.updateLocale();
+      rateLimitBar.updateLocale();
       break;
     }
   }

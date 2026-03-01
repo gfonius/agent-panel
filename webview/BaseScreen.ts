@@ -1,3 +1,5 @@
+import { t } from './i18n';
+
 export class BaseScreen {
   private element: HTMLElement;
 
@@ -8,8 +10,8 @@ export class BaseScreen {
       <div class="base-screen__dropzone">
         <div class="base-screen__icon">&gt;_</div>
         <h2 class="base-screen__title">Agent Panel</h2>
-        <p class="base-screen__subtitle">クリックまたは <kbd>Cmd+N</kbd> でフォルダーを選択</p>
-        <button class="base-screen__button">Open Folder</button>
+        <p class="base-screen__subtitle">${t('base.subtitle')}</p>
+        <button class="base-screen__button">${t('base.button')}</button>
       </div>
     `;
     container.appendChild(this.element);
@@ -24,6 +26,13 @@ export class BaseScreen {
       onOpenFolder();
     });
     (dropzone as HTMLElement).style.cursor = 'pointer';
+  }
+
+  updateLocale(): void {
+    const subtitle = this.element.querySelector('.base-screen__subtitle')!;
+    subtitle.innerHTML = t('base.subtitle');
+    const button = this.element.querySelector('.base-screen__button')!;
+    button.textContent = t('base.button');
   }
 
   show(): void {

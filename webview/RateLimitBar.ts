@@ -1,3 +1,5 @@
+import { t } from './i18n';
+
 export class RateLimitBar {
   private element: HTMLElement;
   private fiveHourBar: HTMLElement;
@@ -43,9 +45,9 @@ export class RateLimitBar {
             <span class="rate-limit-bar__text" data-text="sonnet">--%</span>
             <span class="rate-limit-bar__reset" data-reset="sonnet"></span>
           </div>
-          <div class="rate-limit-bar__error" style="display:none">レート情報取得不可</div>
+          <div class="rate-limit-bar__error" style="display:none">${t('rate.error')}</div>
         </div>
-        <button class="rate-limit-bar__add" title="New Terminal">+</button>
+        <button class="rate-limit-bar__add" title="${t('rate.addTitle')}">+</button>
       </div>
     `;
     container.appendChild(this.element);
@@ -137,7 +139,7 @@ export class RateLimitBar {
     const dateStr = `${resetDate.getMonth() + 1}/${resetDate.getDate()} ${resetDate.getHours().toString().padStart(2, '0')}:${resetDate.getMinutes().toString().padStart(2, '0')}`;
 
     if (diff <= 0) {
-      el.textContent = `リセット済み (${dateStr})`;
+      el.textContent = `${t('rate.reset')} (${dateStr})`;
       return;
     }
 
@@ -156,6 +158,12 @@ export class RateLimitBar {
     }
 
     el.textContent = `${countdown} (${dateStr})`;
+  }
+
+  updateLocale(): void {
+    this.errorMessage.textContent = t('rate.error');
+    const addBtn = this.element.querySelector('.rate-limit-bar__add')!;
+    (addBtn as HTMLElement).title = t('rate.addTitle');
   }
 
   destroy(): void {
