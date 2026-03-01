@@ -38,7 +38,7 @@ export class TerminalManager {
       rows: 24,
       cwd: directory,
       env: (() => {
-        const env: Record<string, string> = { ...process.env as Record<string, string>, TERM: 'xterm-256color', COLORTERM: 'truecolor' };
+        const env: Record<string, string> = { ...process.env as Record<string, string>, TERM: 'xterm-256color', COLORTERM: 'truecolor', TERM_PROGRAM: 'vscode' };
         delete env['CLAUDECODE'];
         return env;
       })(),
