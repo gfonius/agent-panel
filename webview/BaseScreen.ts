@@ -7,7 +7,7 @@ export class BaseScreen {
     this.element.innerHTML = `
       <div class="base-screen__dropzone">
         <div class="base-screen__icon">&gt;_</div>
-        <h2 class="base-screen__title">Claude Panel</h2>
+        <h2 class="base-screen__title">Agent Panel</h2>
         <p class="base-screen__subtitle">クリックまたは <kbd>Cmd+N</kbd> でフォルダーを選択</p>
         <button class="base-screen__button">Open Folder</button>
       </div>

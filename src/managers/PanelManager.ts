@@ -25,7 +25,7 @@ export class PanelManager {
 
     this.panel = vscode.window.createWebviewPanel(
       PANEL_VIEW_TYPE,
-      'Claude Panel',
+      'Agent Panel',
       vscode.ViewColumn.One,
       {
         enableScripts: true,
@@ -45,15 +45,15 @@ export class PanelManager {
     }
 
     // パネルの表示状態に応じてcontext keyを設定
-    vscode.commands.executeCommand('setContext', 'claudePanel.active', true);
+    vscode.commands.executeCommand('setContext', 'agentPanel.active', true);
 
     this.panel.onDidChangeViewState((e) => {
-      vscode.commands.executeCommand('setContext', 'claudePanel.active', e.webviewPanel.active);
+      vscode.commands.executeCommand('setContext', 'agentPanel.active', e.webviewPanel.active);
     });
 
     this.panel.onDidDispose(() => {
       this.panel = undefined;
-      vscode.commands.executeCommand('setContext', 'claudePanel.active', false);
+      vscode.commands.executeCommand('setContext', 'agentPanel.active', false);
       this.onDidDispose();
     });
 
@@ -84,7 +84,7 @@ export class PanelManager {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}'; font-src ${webview.cspSource}; img-src ${webview.cspSource} data:;">
   <link href="${styleUri}" rel="stylesheet">
-  <title>Claude Panel</title>
+  <title>Agent Panel</title>
 </head>
 <body>
   <div id="app"></div>

@@ -1,6 +1,6 @@
 {
-  "name": "claude-panel",
-  "displayName": "Claude Panel",
+  "name": "agent-panel",
+  "displayName": "Agent Panel",
   "description": "Manage multiple Claude Code terminals in a grid layout",
   "version": "0.0.1",
   "publisher": "gfonius",
@@ -14,80 +14,90 @@
   "contributes": {
     "commands": [
       {
-        "command": "claudePanel.open",
-        "title": "Open Claude Panel"
+        "command": "agentPanel.open",
+        "title": "Open Agent Panel"
       },
       {
-        "command": "claudePanel.newTerminal",
-        "title": "Claude Panel: New Terminal"
+        "command": "agentPanel.newTerminal",
+        "title": "Agent Panel: New Terminal"
       },
       {
-        "command": "claudePanel.focusUp",
-        "title": "Claude Panel: Focus Pane Up"
+        "command": "agentPanel.focusUp",
+        "title": "Agent Panel: Focus Pane Up"
       },
       {
-        "command": "claudePanel.focusDown",
-        "title": "Claude Panel: Focus Pane Down"
+        "command": "agentPanel.focusDown",
+        "title": "Agent Panel: Focus Pane Down"
       },
       {
-        "command": "claudePanel.focusLeft",
-        "title": "Claude Panel: Focus Pane Left"
+        "command": "agentPanel.focusLeft",
+        "title": "Agent Panel: Focus Pane Left"
       },
       {
-        "command": "claudePanel.focusRight",
-        "title": "Claude Panel: Focus Pane Right"
+        "command": "agentPanel.focusRight",
+        "title": "Agent Panel: Focus Pane Right"
       },
       {
-        "command": "claudePanel.closeTerminal",
-        "title": "Claude Panel: Close Terminal"
+        "command": "agentPanel.closeTerminal",
+        "title": "Agent Panel: Close Terminal"
       },
       {
-        "command": "claudePanel.openVscodeTerminal",
-        "title": "Claude Panel: Open in VSCode Terminal"
+        "command": "agentPanel.openVscodeTerminal",
+        "title": "Agent Panel: Open in VSCode Terminal"
+      },
+      {
+        "command": "agentPanel.deleteWordBack",
+        "title": "Agent Panel: Delete Word Back"
       }
     ],
     "keybindings": [
       {
-        "command": "claudePanel.newTerminal",
+        "command": "agentPanel.newTerminal",
         "key": "ctrl+n",
         "mac": "cmd+n",
-        "when": "claudePanel.active"
+        "when": "agentPanel.active"
       },
       {
-        "command": "claudePanel.focusUp",
+        "command": "agentPanel.focusUp",
         "key": "ctrl+shift+up",
         "mac": "cmd+shift+up",
-        "when": "claudePanel.active"
+        "when": "agentPanel.active"
       },
       {
-        "command": "claudePanel.focusDown",
+        "command": "agentPanel.focusDown",
         "key": "ctrl+shift+down",
         "mac": "cmd+shift+down",
-        "when": "claudePanel.active"
+        "when": "agentPanel.active"
       },
       {
-        "command": "claudePanel.focusLeft",
+        "command": "agentPanel.focusLeft",
         "key": "ctrl+shift+left",
         "mac": "cmd+shift+left",
-        "when": "claudePanel.active"
+        "when": "agentPanel.active"
       },
       {
-        "command": "claudePanel.focusRight",
+        "command": "agentPanel.focusRight",
         "key": "ctrl+shift+right",
         "mac": "cmd+shift+right",
-        "when": "claudePanel.active"
+        "when": "agentPanel.active"
       },
       {
-        "command": "claudePanel.closeTerminal",
+        "command": "agentPanel.closeTerminal",
         "key": "ctrl+w",
         "mac": "cmd+w",
-        "when": "claudePanel.active"
+        "when": "agentPanel.active"
       },
       {
-        "command": "claudePanel.openVscodeTerminal",
+        "command": "agentPanel.openVscodeTerminal",
         "key": "ctrl+t",
         "mac": "cmd+t",
-        "when": "claudePanel.active"
+        "when": "agentPanel.active"
+      },
+      {
+        "command": "agentPanel.deleteWordBack",
+        "key": "ctrl+backspace",
+        "mac": "cmd+backspace",
+        "when": "agentPanel.active"
       }
     ]
   },
