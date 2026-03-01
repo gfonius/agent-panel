@@ -1,7 +1,7 @@
 # feature/initial-setup
 
 ## 概要
-- VSCode拡張「Claude Panel」の全9フェーズ実装完了
+- VSCode拡張「Agent Panel」の全9フェーズ実装完了
 - node-pty + xterm.js によるWebview内ターミナル管理
 - グリッド分割、セッション永続化、レート制限モニター
 
@@ -28,7 +28,9 @@
 - [x] Cmd+Arrow行頭/行末カーソル移動
 - [x] Option+Arrow単語単位カーソル移動
 - [x] Ctrl+Up/Downエスケープシーケンス対応
-- [x] ユニットテスト追加（vitest, 54テスト）
+- [x] ユニットテスト追加（vitest, 54テスト → 71テスト）
+- [x] ファイラーD&Dでファイルパス挿入（クォート対応）
+- [x] パネルD&Dで並べ替え（間に挿入方式）
 - [ ] restart terminal機能（今後対応）
 
 ## ショートカット一覧
@@ -42,6 +44,8 @@
 | 改行 | Shift+Enter | Claude CLI入力で改行 |
 | 行頭/行末 | Cmd+Left/Right | カーソル移動 |
 | 単語移動 | Option+Left/Right | カーソル移動 |
+| ペイン並べ替え | ヘッダーD&D | ドラッグで間に挿入 |
+| ファイルパス挿入 | Explorer D&D | パスをプロンプトに挿入 |
 
 ## 解決済みの課題
 - node-pty Electronリビルド: `npx @electron/rebuild --version 39.3.0 -w node-pty`
@@ -57,5 +61,5 @@
 npm run compile    # ビルド
 npm test           # テスト実行
 npx vsce package   # .vsix作成
-code --install-extension claude-panel-0.0.1.vsix  # インストール
+code --install-extension agent-panel-0.0.1.vsix  # インストール
 ```
