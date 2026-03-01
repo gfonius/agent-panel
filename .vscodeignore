@@ -8,3 +8,9 @@ tsconfig.json
 webpack.config.js
 **/*.ts
 **/*.map
+docs/**
+.claude/**
+tests/**
+vitest.config.*
+*.vsix
+CLAUDE.md
