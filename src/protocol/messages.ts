@@ -13,6 +13,7 @@ export type HostToWebviewMessage =
   | { type: 'closeActiveTerminal' }
   | { type: 'openActiveInVscodeTerminal' }
   | { type: 'deleteWordBack' }
+  | { type: 'setLocale'; locale: string }
 
 // Webview → Host
 export type WebviewToHostMessage =
@@ -24,4 +25,3 @@ export type WebviewToHostMessage =
   | { type: 'requestRateLimit' }
   | { type: 'openVscodeTerminal'; directory: string }
   | { type: 'requestFolderPicker' }
-  | { type: 'dropUri'; uri: string }

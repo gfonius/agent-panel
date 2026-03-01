@@ -1,9 +1,22 @@
 {
   "name": "agent-panel",
   "displayName": "Agent Panel",
-  "description": "Manage multiple Claude Code terminals in a grid layout",
+  "description": "Manage multiple terminals in a grid layout",
   "version": "0.0.1",
   "publisher": "gfonius",
+  "license": "MIT",
+  "icon": "images/icon.png",
+  "homepage": "https://github.com/gfonius/agent-panel",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gfonius/agent-panel.git"
+  },
+  "bugs": {
+    "url": "https://github.com/gfonius/agent-panel/issues"
+  },
+  "categories": [
+    "Other"
+  ],
   "engines": {
     "vscode": "^1.96.0"
   },

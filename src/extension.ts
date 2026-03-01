@@ -83,6 +83,8 @@ export function activate(context: vscode.ExtensionContext) {
   async function handleWebviewMessage(msg: WebviewToHostMessage): Promise<void> {
     switch (msg.type) {
       case 'ready':
+        // ロケールを送信
+        panelManager.postMessage({ type: 'setLocale', locale: vscode.env.language });
         // バックグラウンドで動いてるターミナルがあれば再接続
         if (terminalManager && terminalManager.count > 0) {
           const terminals = terminalManager.getAllTerminals();
@@ -127,27 +129,9 @@ export function activate(context: vscode.ExtensionContext) {
       case 'openVscodeTerminal': {
         const terminal = vscode.window.createTerminal({
           cwd: msg.directory,
-          name: `Claude: ${msg.directory.split('/').pop()}`,
+          name: `Agent Panel: ${msg.directory.split('/').pop()}`,
         });
         terminal.show();
-        break;
-      }
-      case 'dropUri': {
-        let fsPath: string;
-        try {
-          const uri = vscode.Uri.parse(msg.uri);
-          fsPath = uri.fsPath;
-        } catch {
-          break;
-        }
-        const fs = require('fs');
-        try {
-          const stat = fs.statSync(fsPath);
-          const dir = stat.isDirectory() ? fsPath : require('path').dirname(fsPath);
-          createTerminal(dir);
-        } catch {
-          // invalid path
-        }
         break;
       }
       case 'requestRateLimit':
