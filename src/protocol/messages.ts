@@ -12,6 +12,7 @@ export type HostToWebviewMessage =
   | { type: 'focusDirection'; direction: 'up' | 'down' | 'left' | 'right' }
   | { type: 'closeActiveTerminal' }
   | { type: 'openActiveInVscodeTerminal' }
+  | { type: 'deleteWordBack' }
 
 // Webview → Host
 export type WebviewToHostMessage =

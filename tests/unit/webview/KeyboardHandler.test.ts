@@ -60,71 +60,69 @@ describe('KeyboardHandler', () => {
     });
   });
 
-  describe('Ctrl+Shift+Arrow (ctrlKey)', () => {
-    it('ArrowUp → returns false and calls focusDirection("up")', () => {
+  describe('Ctrl+Shift+Arrow (ctrlKey) — does NOT trigger pane navigation', () => {
+    it('ArrowUp → returns true, passes to xterm (not a custom shortcut)', () => {
       const e = makeEvent({ ctrlKey: true, shiftKey: true, key: 'ArrowUp' });
-      expect(handler(e)).toBe(false);
-      expect(focusDirection).toHaveBeenCalledWith('up');
-    });
-
-    it('ArrowDown → returns false and calls focusDirection("down")', () => {
-      const e = makeEvent({ ctrlKey: true, shiftKey: true, key: 'ArrowDown' });
-      expect(handler(e)).toBe(false);
-      expect(focusDirection).toHaveBeenCalledWith('down');
-    });
-
-    it('ArrowLeft → returns false and calls focusDirection("left")', () => {
-      const e = makeEvent({ ctrlKey: true, shiftKey: true, key: 'ArrowLeft' });
-      expect(handler(e)).toBe(false);
-      expect(focusDirection).toHaveBeenCalledWith('left');
-    });
-
-    it('ArrowRight → returns false and calls focusDirection("right")', () => {
-      const e = makeEvent({ ctrlKey: true, shiftKey: true, key: 'ArrowRight' });
-      expect(handler(e)).toBe(false);
-      expect(focusDirection).toHaveBeenCalledWith('right');
+      expect(handler(e)).toBe(true);
+      expect(focusDirection).not.toHaveBeenCalled();
     });
   });
 
-  describe('Cmd+W', () => {
+  describe('Cmd+W (metaKey)', () => {
     it('returns false and calls closeFocused', () => {
       const e = makeEvent({ metaKey: true, key: 'w' });
       expect(handler(e)).toBe(false);
       expect(closeFocused).toHaveBeenCalledOnce();
     });
+  });
 
-    it('Ctrl+W also calls closeFocused', () => {
+  describe('Ctrl+W/T/N (ctrlKey) — passes to xterm as control chars', () => {
+    it('Ctrl+W returns true and does NOT call closeFocused', () => {
       const e = makeEvent({ ctrlKey: true, key: 'w' });
-      expect(handler(e)).toBe(false);
-      expect(closeFocused).toHaveBeenCalledOnce();
+      expect(handler(e)).toBe(true);
+      expect(closeFocused).not.toHaveBeenCalled();
+    });
+
+    it('Ctrl+T returns true and does NOT call openVscodeTerminal', () => {
+      const e = makeEvent({ ctrlKey: true, key: 't' });
+      expect(handler(e)).toBe(true);
+      expect(openVscodeTerminal).not.toHaveBeenCalled();
+    });
+
+    it('Ctrl+N returns true and does NOT post requestFolderPicker', () => {
+      const e = makeEvent({ ctrlKey: true, key: 'n' });
+      expect(handler(e)).toBe(true);
+      expect(postMessage).not.toHaveBeenCalled();
     });
   });
 
-  describe('Cmd+T', () => {
+  describe('Cmd+T (metaKey)', () => {
     it('returns false and calls openVscodeTerminal', () => {
       const e = makeEvent({ metaKey: true, key: 't' });
       expect(handler(e)).toBe(false);
       expect(openVscodeTerminal).toHaveBeenCalledOnce();
     });
-
-    it('Ctrl+T also calls openVscodeTerminal', () => {
-      const e = makeEvent({ ctrlKey: true, key: 't' });
-      expect(handler(e)).toBe(false);
-      expect(openVscodeTerminal).toHaveBeenCalledOnce();
-    });
   });
 
-  describe('Cmd+N', () => {
+  describe('Cmd+N (metaKey)', () => {
     it('returns false and posts requestFolderPicker message', () => {
       const e = makeEvent({ metaKey: true, key: 'n' });
       expect(handler(e)).toBe(false);
       expect(postMessage).toHaveBeenCalledWith({ type: 'requestFolderPicker' });
     });
+  });
 
-    it('Ctrl+N also posts requestFolderPicker message', () => {
-      const e = makeEvent({ ctrlKey: true, key: 'n' });
-      expect(handler(e)).toBe(false);
-      expect(postMessage).toHaveBeenCalledWith({ type: 'requestFolderPicker' });
+  describe('Ctrl+Backspace', () => {
+    it('returns true (handled by VSCode keybinding, not webview)', () => {
+      const e = makeEvent({ ctrlKey: true, key: 'Backspace' });
+      expect(handler(e)).toBe(true);
+    });
+  });
+
+  describe('Ctrl+[a-z] (not intercepted)', () => {
+    it('Ctrl+C returns true (xterm handles it)', () => {
+      const e = makeEvent({ ctrlKey: true, key: 'c' });
+      expect(handler(e)).toBe(true);
     });
   });
 

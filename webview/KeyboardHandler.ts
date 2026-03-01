@@ -19,19 +19,18 @@ export class KeyboardHandler {
   // xterm.js の attachCustomKeyEventHandler に渡す関数を返す
   getKeyHandler(): (e: KeyboardEvent) => boolean {
     return (e: KeyboardEvent): boolean => {
-      const mod = e.metaKey || e.ctrlKey; // macOS: Cmd, Win/Linux: Ctrl
-
       // Shift+Enter, Cmd+Arrow, Option+Arrow はdocument captureリスナーで処理
       // xterm.jsのデフォルト処理を防ぐためfalseを返す
       if (e.type === 'keydown') {
         if (e.key === 'Enter' && e.shiftKey && !e.metaKey && !e.ctrlKey) return false;
         if (e.metaKey && !e.shiftKey && !e.ctrlKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) return false;
+        if (e.metaKey && !e.shiftKey && !e.ctrlKey && e.key === 'Backspace') return false;
         if (e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) return false;
         if (e.altKey && !e.metaKey && !e.ctrlKey && !e.shiftKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) return false;
       }
 
-      // Mod+Shift+Arrow: ペイン間移動
-      if (mod && e.shiftKey && e.type === 'keydown') {
+      // Cmd+Shift+Arrow: ペイン間移動（macOSカスタムショートカット）
+      if (e.metaKey && e.shiftKey && e.type === 'keydown') {
         switch (e.key) {
           case 'ArrowUp':
             this.focusDirection('up');
@@ -48,20 +47,20 @@ export class KeyboardHandler {
         }
       }
 
-      // Mod+W: フォーカス中のペインを閉じる
-      if (mod && e.key === 'w' && !e.shiftKey && e.type === 'keydown') {
+      // Cmd+W: フォーカス中のペインを閉じる（macOSカスタムショートカット）
+      if (e.metaKey && e.key === 'w' && !e.shiftKey && e.type === 'keydown') {
         this.closeFocused();
         return false;
       }
 
-      // Mod+T: VSCodeターミナルで開く
-      if (mod && e.key === 't' && !e.shiftKey && e.type === 'keydown') {
+      // Cmd+T: VSCodeターミナルで開く
+      if (e.metaKey && e.key === 't' && !e.shiftKey && e.type === 'keydown') {
         this.openVscodeTerminal();
         return false;
       }
 
-      // Mod+N: 新規ターミナル（フォルダーピッカー）
-      if (mod && e.key === 'n' && !e.shiftKey && e.type === 'keydown') {
+      // Cmd+N: 新規ターミナル（フォルダーピッカー）
+      if (e.metaKey && e.key === 'n' && !e.shiftKey && e.type === 'keydown') {
         this.postMessage({ type: 'requestFolderPicker' });
         return false;
       }
