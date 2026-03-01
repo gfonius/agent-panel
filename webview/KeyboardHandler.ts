@@ -21,6 +21,15 @@ export class KeyboardHandler {
     return (e: KeyboardEvent): boolean => {
       const mod = e.metaKey || e.ctrlKey; // macOS: Cmd, Win/Linux: Ctrl
 
+      // Shift+Enter, Cmd+Arrow, Option+Arrow はdocument captureリスナーで処理
+      // xterm.jsのデフォルト処理を防ぐためfalseを返す
+      if (e.type === 'keydown') {
+        if (e.key === 'Enter' && e.shiftKey && !e.metaKey && !e.ctrlKey) return false;
+        if (e.metaKey && !e.shiftKey && !e.ctrlKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) return false;
+        if (e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) return false;
+        if (e.altKey && !e.metaKey && !e.ctrlKey && !e.shiftKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) return false;
+      }
+
       // Mod+Shift+Arrow: ペイン間移動
       if (mod && e.shiftKey && e.type === 'keydown') {
         switch (e.key) {

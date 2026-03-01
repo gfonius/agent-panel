@@ -192,6 +192,76 @@ window.addEventListener('message', (event: MessageEvent<HostToWebviewMessage>) =
 document.addEventListener('keydown', (e: KeyboardEvent) => {
   const mod = e.metaKey || e.ctrlKey; // macOS: Cmd, Win/Linux: Ctrl
 
+  // Shift+Enter: Claude CLIで改行（LF送信）
+  if (e.key === 'Enter' && e.shiftKey && !e.metaKey && !e.ctrlKey) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (focusedPaneId) {
+      postMessage({ type: 'terminalInput', terminalId: focusedPaneId, data: '\n' });
+    }
+    return;
+  }
+
+  // Cmd+Arrow（Shiftなし）: カーソル移動（行頭/行末）
+  if (e.metaKey && !e.shiftKey && !e.ctrlKey) {
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      e.stopPropagation();
+      if (focusedPaneId) {
+        postMessage({ type: 'terminalInput', terminalId: focusedPaneId, data: '\x1bOH' });
+      }
+      return;
+    }
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      e.stopPropagation();
+      if (focusedPaneId) {
+        postMessage({ type: 'terminalInput', terminalId: focusedPaneId, data: '\x1bOF' });
+      }
+      return;
+    }
+  }
+
+  // Ctrl+Up/Down: 通常のターミナル動作（履歴スクロール等）
+  if (e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      e.stopPropagation();
+      if (focusedPaneId) {
+        postMessage({ type: 'terminalInput', terminalId: focusedPaneId, data: '\x1b[1;5A' });
+      }
+      return;
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      e.stopPropagation();
+      if (focusedPaneId) {
+        postMessage({ type: 'terminalInput', terminalId: focusedPaneId, data: '\x1b[1;5B' });
+      }
+      return;
+    }
+  }
+
+  // Option+Arrow: 単語単位カーソル移動
+  if (e.altKey && !e.metaKey && !e.ctrlKey && !e.shiftKey) {
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      e.stopPropagation();
+      if (focusedPaneId) {
+        postMessage({ type: 'terminalInput', terminalId: focusedPaneId, data: '\x1bb' });
+      }
+      return;
+    }
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      e.stopPropagation();
+      if (focusedPaneId) {
+        postMessage({ type: 'terminalInput', terminalId: focusedPaneId, data: '\x1bf' });
+      }
+      return;
+    }
+  }
+
   // Mod+Shift+Arrow: ペイン間移動
   if (mod && e.shiftKey) {
     const dirMap: Record<string, 'up' | 'down' | 'left' | 'right'> = {
