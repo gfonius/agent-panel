@@ -1,0 +1,143 @@
+{
+  "name": "agent-panel",
+  "displayName": "Agent Panel",
+  "description": "Manage multiple terminals in a grid layout",
+  "version": "0.0.1",
+  "publisher": "gfonius",
+  "license": "MIT",
+  "icon": "images/icon.png",
+  "homepage": "https://github.com/gfonius/agent-panel",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gfonius/agent-panel.git"
+  },
+  "bugs": {
+    "url": "https://github.com/gfonius/agent-panel/issues"
+  },
+  "categories": [
+    "Other"
+  ],
+  "engines": {
+    "vscode": "^1.96.0"
+  },
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "agentPanel.open",
+        "title": "Open Agent Panel"
+      },
+      {
+        "command": "agentPanel.newTerminal",
+        "title": "Agent Panel: New Terminal"
+      },
+      {
+        "command": "agentPanel.focusUp",
+        "title": "Agent Panel: Focus Pane Up"
+      },
+      {
+        "command": "agentPanel.focusDown",
+        "title": "Agent Panel: Focus Pane Down"
+      },
+      {
+        "command": "agentPanel.focusLeft",
+        "title": "Agent Panel: Focus Pane Left"
+      },
+      {
+        "command": "agentPanel.focusRight",
+        "title": "Agent Panel: Focus Pane Right"
+      },
+      {
+        "command": "agentPanel.closeTerminal",
+        "title": "Agent Panel: Close Terminal"
+      },
+      {
+        "command": "agentPanel.openVscodeTerminal",
+        "title": "Agent Panel: Open in VSCode Terminal"
+      },
+      {
+        "command": "agentPanel.deleteWordBack",
+        "title": "Agent Panel: Delete Word Back"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "agentPanel.newTerminal",
+        "key": "ctrl+n",
+        "mac": "cmd+n",
+        "when": "agentPanel.active"
+      },
+      {
+        "command": "agentPanel.focusUp",
+        "key": "ctrl+shift+up",
+        "mac": "cmd+shift+up",
+        "when": "agentPanel.active"
+      },
+      {
+        "command": "agentPanel.focusDown",
+        "key": "ctrl+shift+down",
+        "mac": "cmd+shift+down",
+        "when": "agentPanel.active"
+      },
+      {
+        "command": "agentPanel.focusLeft",
+        "key": "ctrl+shift+left",
+        "mac": "cmd+shift+left",
+        "when": "agentPanel.active"
+      },
+      {
+        "command": "agentPanel.focusRight",
+        "key": "ctrl+shift+right",
+        "mac": "cmd+shift+right",
+        "when": "agentPanel.active"
+      },
+      {
+        "command": "agentPanel.closeTerminal",
+        "key": "ctrl+w",
+        "mac": "cmd+w",
+        "when": "agentPanel.active"
+      },
+      {
+        "command": "agentPanel.openVscodeTerminal",
+        "key": "ctrl+t",
+        "mac": "cmd+t",
+        "when": "agentPanel.active"
+      },
+      {
+        "command": "agentPanel.deleteWordBack",
+        "key": "ctrl+backspace",
+        "mac": "cmd+backspace",
+        "when": "agentPanel.active"
+      }
+    ]
+  },
+  "dependencies": {
+    "node-pty": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.96.0",
+    "@vscode/vsce": "^3.0.0",
+    "@xterm/addon-fit": "^0.10.0",
+    "@xterm/addon-serialize": "^0.13.0",
+    "@xterm/addon-webgl": "^0.18.0",
+    "@xterm/xterm": "^5.5.0",
+    "copy-webpack-plugin": "^12.0.0",
+    "css-loader": "^7.1.0",
+    "mini-css-extract-plugin": "^2.9.0",
+    "style-loader": "^4.0.0",
+    "ts-loader": "^9.5.0",
+    "typescript": "^5.7.0",
+    "vitest": "^4.0.18",
+    "webpack": "^5.97.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "scripts": {
+    "compile": "webpack",
+    "watch": "webpack --watch",
+    "package": "vsce package",
+    "test": "vitest run"
+  }
+}
