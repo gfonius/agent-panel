@@ -8,7 +8,7 @@ export class TerminalPane {
   readonly directory: string;
   private terminal: Terminal;
   private fitAddon: FitAddon;
-  private element: HTMLElement;
+  readonly element: HTMLElement;
   private postMessage: (msg: WebviewToHostMessage) => void;
   private focused: boolean = false;
 
@@ -44,6 +44,19 @@ export class TerminalPane {
     closeBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       this.postMessage({ type: 'closeTerminal', terminalId: this.id });
+    });
+
+    // ドラッグ&ドロップ: ヘッダーをドラッグハンドルにする
+    header.draggable = true;
+
+    header.addEventListener('dragstart', (e: DragEvent) => {
+      e.dataTransfer!.setData('text/x-pane-id', this.id);
+      e.dataTransfer!.effectAllowed = 'move';
+      this.element.classList.add('terminal-pane--dragging');
+    });
+
+    header.addEventListener('dragend', () => {
+      this.element.classList.remove('terminal-pane--dragging');
     });
 
     header.appendChild(title);

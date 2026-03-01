@@ -1,4 +1,4 @@
-/* Claude Panel - Main Styles */
+/* Agent Panel - Main Styles */
 :root {
   --panel-bg: var(--vscode-editor-background);
   --panel-fg: var(--vscode-editor-foreground);
@@ -125,6 +125,21 @@ body {
   outline-offset: -1px;
 }
 
+/* ドラッグ中のペイン */
+.terminal-pane--dragging {
+  opacity: 0.4;
+}
+
+/* ドロップインジケーター（前に挿入） */
+.terminal-pane--drop-before {
+  box-shadow: inset 3px 0 0 0 var(--vscode-focusBorder, #007fd4);
+}
+
+/* ドロップインジケーター（後に挿入） */
+.terminal-pane--drop-after {
+  box-shadow: inset -3px 0 0 0 var(--vscode-focusBorder, #007fd4);
+}
+
 .terminal-pane__header {
   display: flex;
   align-items: center;
@@ -134,6 +149,12 @@ body {
   border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
   height: 24px;
+  cursor: grab;
+  user-select: none;
+}
+
+.terminal-pane__header:active {
+  cursor: grabbing;
 }
 
 .terminal-pane__title {
