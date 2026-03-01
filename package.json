@@ -1,0 +1,120 @@
+{
+  "name": "claude-panel",
+  "displayName": "Claude Panel",
+  "description": "Manage multiple Claude Code terminals in a grid layout",
+  "version": "0.0.1",
+  "publisher": "gfonius",
+  "engines": {
+    "vscode": "^1.96.0"
+  },
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "claudePanel.open",
+        "title": "Open Claude Panel"
+      },
+      {
+        "command": "claudePanel.newTerminal",
+        "title": "Claude Panel: New Terminal"
+      },
+      {
+        "command": "claudePanel.focusUp",
+        "title": "Claude Panel: Focus Pane Up"
+      },
+      {
+        "command": "claudePanel.focusDown",
+        "title": "Claude Panel: Focus Pane Down"
+      },
+      {
+        "command": "claudePanel.focusLeft",
+        "title": "Claude Panel: Focus Pane Left"
+      },
+      {
+        "command": "claudePanel.focusRight",
+        "title": "Claude Panel: Focus Pane Right"
+      },
+      {
+        "command": "claudePanel.closeTerminal",
+        "title": "Claude Panel: Close Terminal"
+      },
+      {
+        "command": "claudePanel.openVscodeTerminal",
+        "title": "Claude Panel: Open in VSCode Terminal"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "claudePanel.newTerminal",
+        "key": "ctrl+n",
+        "mac": "cmd+n",
+        "when": "claudePanel.active"
+      },
+      {
+        "command": "claudePanel.focusUp",
+        "key": "ctrl+shift+up",
+        "mac": "cmd+shift+up",
+        "when": "claudePanel.active"
+      },
+      {
+        "command": "claudePanel.focusDown",
+        "key": "ctrl+shift+down",
+        "mac": "cmd+shift+down",
+        "when": "claudePanel.active"
+      },
+      {
+        "command": "claudePanel.focusLeft",
+        "key": "ctrl+shift+left",
+        "mac": "cmd+shift+left",
+        "when": "claudePanel.active"
+      },
+      {
+        "command": "claudePanel.focusRight",
+        "key": "ctrl+shift+right",
+        "mac": "cmd+shift+right",
+        "when": "claudePanel.active"
+      },
+      {
+        "command": "claudePanel.closeTerminal",
+        "key": "ctrl+w",
+        "mac": "cmd+w",
+        "when": "claudePanel.active"
+      },
+      {
+        "command": "claudePanel.openVscodeTerminal",
+        "key": "ctrl+t",
+        "mac": "cmd+t",
+        "when": "claudePanel.active"
+      }
+    ]
+  },
+  "dependencies": {
+    "node-pty": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.96.0",
+    "@vscode/vsce": "^3.0.0",
+    "@xterm/addon-fit": "^0.10.0",
+    "@xterm/addon-serialize": "^0.13.0",
+    "@xterm/addon-webgl": "^0.18.0",
+    "@xterm/xterm": "^5.5.0",
+    "copy-webpack-plugin": "^12.0.0",
+    "css-loader": "^7.1.0",
+    "mini-css-extract-plugin": "^2.9.0",
+    "style-loader": "^4.0.0",
+    "ts-loader": "^9.5.0",
+    "typescript": "^5.7.0",
+    "vitest": "^4.0.18",
+    "webpack": "^5.97.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "scripts": {
+    "compile": "webpack",
+    "watch": "webpack --watch",
+    "package": "vsce package",
+    "test": "vitest run"
+  }
+}

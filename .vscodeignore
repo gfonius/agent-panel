@@ -1,0 +1,10 @@
+.vscode/**
+src/**
+webview/**
+node_modules/**
+!node_modules/node-pty/**
+.gitignore
+tsconfig.json
+webpack.config.js
+**/*.ts
+**/*.map
