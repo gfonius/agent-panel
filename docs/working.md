@@ -1,65 +1,21 @@
-# feature/initial-setup
+# feature/fix-file-drop-path-insertion
 
 ## 概要
-- VSCode拡張「Agent Panel」の全9フェーズ実装完了
-- node-pty + xterm.js によるWebview内ターミナル管理
-- グリッド分割、セッション永続化、レート制限モニター
+- VSCode ExplorerからファイルをD&Dした時、ペインレベルのdropハンドラが全dropイベントをstopPropagation()して遮断している問題を修正
+- ファイルdropをペインレベルで直接処理する方式に変更
+- DragDropHandler.ts（デッドコード）削除
 
-## フェーズ進捗 - 全完了
+## 進捗
+- [x] ブランチ作成・コード読み込み
+- [x] テスト作成（TDD: テストファースト）
+- [x] index.ts drop/dragover/dragleave ハンドラ修正
+- [x] main.css ファイルドロップターゲットCSS追加・デッドコード削除
+- [x] DragDropHandler.ts 削除
+- [x] ビルド確認 — エラーなし
+- [x] テスト実行 — 75テスト全パス（fileDrop.test.ts: 12テスト）
 
-- [x] Phase 1: プロジェクト基盤
-- [x] Phase 2: ステータスバー + パネル表示
-- [x] Phase 3: 単一ターミナル動作
-- [x] Phase 4: マルチターミナル・グリッド
-- [x] Phase 5: D&D（VSCode Explorer D&D対応、Finder D&Dは非対応）
-- [x] Phase 6: キーボードナビゲーション
-- [x] Phase 7: セッション永続化
-- [x] Phase 8: レート制限モニター（5h/7d/Sonnet + リセット日時）
-- [x] Phase 9: 仕上げ
-
-## 追加実装（フェーズ後）
-
-- [x] macOSキーバインド修正（Ctrl→Cmd）
-- [x] ペイン開時にclaude自動実行
-- [x] グリッド均等化（spanなし、3ペイン→2x2で空白スロット）
-- [x] 初期画面にOpen Folderボタン追加
-- [x] レート制限バー右に「+」ボタン追加
-- [x] Shift+Enter改行対応（LF送信 + TERM_PROGRAM=vscode）
-- [x] Cmd+Arrow行頭/行末カーソル移動
-- [x] Option+Arrow単語単位カーソル移動
-- [x] Ctrl+Up/Downエスケープシーケンス対応
-- [x] ユニットテスト追加（vitest, 54テスト → 71テスト）
-- [x] ファイラーD&Dでファイルパス挿入（クォート対応）
-- [x] パネルD&Dで並べ替え（間に挿入方式）
-- [ ] restart terminal機能（今後対応）
-
-## ショートカット一覧
-
-| キー | macOS | 機能 |
-|------|-------|------|
-| 新規ターミナル | Cmd+N | フォルダーピッカー |
-| ペイン閉じる | Cmd+W | フォーカス中のペイン |
-| ペイン移動 | Cmd+Shift+Arrow | 上下左右 |
-| VSCodeターミナル | Cmd+T | フォーカス中をVSCodeで開く |
-| 改行 | Shift+Enter | Claude CLI入力で改行 |
-| 行頭/行末 | Cmd+Left/Right | カーソル移動 |
-| 単語移動 | Option+Left/Right | カーソル移動 |
-| ペイン並べ替え | ヘッダーD&D | ドラッグで間に挿入 |
-| ファイルパス挿入 | Explorer D&D | パスをプロンプトに挿入 |
-
-## 解決済みの課題
-- node-pty Electronリビルド: `npx @electron/rebuild --version 39.3.0 -w node-pty`
-- パスのスペース問題: ディレクトリリネーム
-- CLAUDECODE環境変数除外（ネスト防止）
-- node-pty遅延読み込み（ABI不一致対策）
-- macOSでCtrl→Cmdキーバインド統一
-- Finder D&D非対応（webviewサンドボックス制約）
-- TERM_PROGRAM=vscode設定でClaude CLI互換性確保
-
-## ビルド・インストール
-```bash
-npm run compile    # ビルド
-npm test           # テスト実行
-npx vsce package   # .vsix作成
-code --install-extension agent-panel-0.0.1.vsix  # インストール
-```
+## 変更ファイル
+- webview/index.ts — drop/dragover/dragleave ハンドラ修正
+- webview/styles/main.css — CSS追加・デッドコード削除
+- webview/DragDropHandler.ts — 削除（デッドコード）
+- tests/unit/webview/fileDrop.test.ts — 複数URI対応テスト5件追加

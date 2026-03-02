@@ -140,6 +140,12 @@ body {
   box-shadow: inset -3px 0 0 0 var(--vscode-focusBorder, #007fd4);
 }
 
+/* ファイルドロップターゲット */
+.terminal-pane--file-drop-target {
+  outline: 2px solid var(--vscode-focusBorder, #007fd4);
+  outline-offset: -2px;
+}
+
 .terminal-pane__header {
   display: flex;
   align-items: center;
@@ -319,25 +325,3 @@ body {
   padding: 2px 0;
 }
 
-/* Drop Overlay */
-.drop-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.drop-overlay__content {
-  border: 2px dashed var(--focus-border);
-  border-radius: 12px;
-  padding: 40px 60px;
-  font-size: 18px;
-  color: var(--panel-fg);
-  background: var(--panel-bg);
-}

@@ -8,7 +8,7 @@ import { RateLimitBar } from './RateLimitBar';
 import { ShortcutGuide } from './ShortcutGuide';
 import { setLocale as setI18nLocale } from './i18n';
 import { reorderPaneIds } from './paneOrderUtils';
-import { uriToPath, quotePath } from './fileDropUtils';
+import { extractFilePaths } from './fileDropUtils';
 import type { HostToWebviewMessage, WebviewToHostMessage } from '../src/protocol/messages';
 
 declare function acquireVsCodeApi(): {
@@ -338,7 +338,7 @@ document.addEventListener('keydown', (e: KeyboardEvent) => {
 /** すべてのペインからドロップインジケータークラスを除去する */
 function clearDropIndicators(): void {
   for (const p of panes.values()) {
-    p.element.classList.remove('terminal-pane--drop-before', 'terminal-pane--drop-after');
+    p.element.classList.remove('terminal-pane--drop-before', 'terminal-pane--drop-after', 'terminal-pane--file-drop-target');
   }
 }
 
@@ -368,52 +368,56 @@ function setupPaneDragDrop(pane: TerminalPane): void {
   const el = pane.element;
 
   el.addEventListener('dragover', (e: DragEvent) => {
-    // ペイン D&D のみ反応（ファイル D&D と区別）
-    if (!e.dataTransfer?.types.includes('text/x-pane-id')) return;
-
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-
-    const rect = el.getBoundingClientRect();
-    const midX = rect.left + rect.width / 2;
-
-    clearDropIndicators();
-
-    if (e.clientX < midX) {
-      el.classList.add('terminal-pane--drop-before');
-    } else {
-      el.classList.add('terminal-pane--drop-after');
+    if (e.dataTransfer?.types.includes('text/x-pane-id')) {
+      // ペインD&D
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      const rect = el.getBoundingClientRect();
+      const midX = rect.left + rect.width / 2;
+      clearDropIndicators();
+      if (e.clientX < midX) {
+        el.classList.add('terminal-pane--drop-before');
+      } else {
+        el.classList.add('terminal-pane--drop-after');
+      }
+      return;
+    }
+    // ファイルD&D → ドロップ先ハイライト
+    // types チェックなしで全ドラッグを受け入れ（VSCode内部のMIMEタイプが不定のため）
+    if (!e.dataTransfer?.types.includes('text/x-pane-id')) {
+      e.preventDefault();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+      el.classList.add('terminal-pane--file-drop-target');
     }
   });
 
   el.addEventListener('dragleave', (e: DragEvent) => {
-    // 子要素への dragleave は無視（ペイン外に出た場合のみクリア）
     if (el.contains(e.relatedTarget as Node)) return;
-    el.classList.remove('terminal-pane--drop-before', 'terminal-pane--drop-after');
+    el.classList.remove('terminal-pane--drop-before', 'terminal-pane--drop-after', 'terminal-pane--file-drop-target');
   });
 
   el.addEventListener('drop', (e: DragEvent) => {
     e.preventDefault();
-    e.stopPropagation(); // document の drop ハンドラに伝播させない
 
+    // ペイン並べ替えD&D
     const draggedId = e.dataTransfer?.getData('text/x-pane-id');
-    if (!draggedId || draggedId === pane.id) {
+    if (draggedId) {
+      e.stopPropagation();
+      if (draggedId === pane.id) { clearDropIndicators(); return; }
+      const rect = el.getBoundingClientRect();
+      const midX = rect.left + rect.width / 2;
+      reorderPanes(draggedId, pane.id, e.clientX < midX);
       clearDropIndicators();
       return;
     }
 
-    const rect = el.getBoundingClientRect();
-    const midX = rect.left + rect.width / 2;
-    const insertBefore = e.clientX < midX;
-
-    reorderPanes(draggedId, pane.id, insertBefore);
-    clearDropIndicators();
+    // ファイルD&D → document handler に委譲（stopPropagation しない）
+    el.classList.remove('terminal-pane--file-drop-target');
   });
 }
 
-// VSCode Explorer D&D（text/uri-list経由）
+// VSCode Explorer D&D — document レベルハンドラ
 document.addEventListener('dragover', (e) => {
-  // ペイン D&D の場合はペイン側で処理するため document レベルでは何もしない
   if (e.dataTransfer?.types.includes('text/x-pane-id')) return;
   e.preventDefault();
   if (e.dataTransfer) {
@@ -423,22 +427,34 @@ document.addEventListener('dragover', (e) => {
 
 document.addEventListener('drop', (e: DragEvent) => {
   e.preventDefault();
-  // ペイン D&D の場合はすでにペインの drop ハンドラで処理済み
   if (e.dataTransfer?.types.includes('text/x-pane-id')) return;
-  const uriList = e.dataTransfer?.getData('text/uri-list');
-  if (uriList) {
-    const uri = uriList.split('\n')[0].trim();
-    if (uri) {
-      if (focusedPaneId && panes.has(focusedPaneId)) {
-        // フォーカス中のペインにファイルパスを挿入
-        const path = uriToPath(uri);
-        const quoted = quotePath(path);
-        postMessage({ type: 'terminalInput', terminalId: focusedPaneId, data: quoted });
-      } else {
-        // フォーカス中のペインがない場合はフォルダーピッカーを開く
-        postMessage({ type: 'requestFolderPicker' });
-      }
-    }
+
+  // 全ペインのファイルドロップハイライトをクリア
+  for (const p of panes.values()) {
+    p.element.classList.remove('terminal-pane--file-drop-target');
+  }
+
+  if (!e.dataTransfer) return;
+
+  const paths = extractFilePaths(
+    e.dataTransfer.getData('text/uri-list'),
+    e.dataTransfer.getData('text/plain')
+  );
+  if (paths.length === 0) return;
+
+  // ドロップ先ペインを特定: e.target の祖先 → focusedPane → 先頭ペイン
+  const targetEl = (e.target as HTMLElement).closest?.('.terminal-pane') as HTMLElement | null;
+  const dropPaneId = targetEl?.dataset?.terminalId ?? null;
+
+  const targetId = (dropPaneId && panes.has(dropPaneId))
+    ? dropPaneId
+    : (focusedPaneId && panes.has(focusedPaneId))
+      ? focusedPaneId
+      : paneOrder[0] ?? null;
+
+  if (targetId) {
+    focusPane(targetId);
+    postMessage({ type: 'terminalInput', terminalId: targetId, data: paths.join(' ') });
   }
 });
 
