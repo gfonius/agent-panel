@@ -13,6 +13,8 @@ const translations: Record<Locale, Record<string, string>> = {
     'shortcut.nav': 'Navigate',
     'shortcut.wordDel': 'Word Del',
     'shortcut.newline': 'Newline',
+    'shortcut.maximize': 'Maximize',
+    'notification.completed': 'completed response',
   },
   ja: {
     'base.subtitle': 'クリックまたは <kbd>Cmd+N</kbd> でフォルダーを選択',
@@ -26,6 +28,8 @@ const translations: Record<Locale, Record<string, string>> = {
     'shortcut.nav': 'ペイン移動',
     'shortcut.wordDel': '単語削除',
     'shortcut.newline': '改行',
+    'shortcut.maximize': '最大化',
+    'notification.completed': 'が応答完了',
   },
 };
 

@@ -3,17 +3,20 @@ export class KeyboardHandler {
   private focusDirection: (direction: 'up' | 'down' | 'left' | 'right') => void;
   private closeFocused: () => void;
   private openVscodeTerminal: () => void;
+  private restoreFromMaximize: () => void;
 
   constructor(options: {
     postMessage: (msg: unknown) => void;
     focusDirection: (direction: 'up' | 'down' | 'left' | 'right') => void;
     closeFocused: () => void;
     openVscodeTerminal: () => void;
+    restoreFromMaximize: () => void;
   }) {
     this.postMessage = options.postMessage;
     this.focusDirection = options.focusDirection;
     this.closeFocused = options.closeFocused;
     this.openVscodeTerminal = options.openVscodeTerminal;
+    this.restoreFromMaximize = options.restoreFromMaximize;
   }
 
   // xterm.js の attachCustomKeyEventHandler に渡す関数を返す
@@ -27,6 +30,12 @@ export class KeyboardHandler {
         if (e.metaKey && !e.shiftKey && !e.ctrlKey && e.key === 'Backspace') return false;
         if (e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) return false;
         if (e.altKey && !e.metaKey && !e.ctrlKey && !e.shiftKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) return false;
+      }
+
+      // Escape: 最大化モードを解除
+      if (e.key === 'Escape' && e.type === 'keydown') {
+        this.restoreFromMaximize();
+        return false;
       }
 
       // Cmd+Shift+Arrow: ペイン間移動（macOSカスタムショートカット）

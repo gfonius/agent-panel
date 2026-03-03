@@ -22,6 +22,7 @@ export class ShortcutGuide {
       `<kbd>⇧⌘↑↓←→</kbd> ${t('shortcut.nav')}`,
       `<kbd>⌘⌫</kbd> ${t('shortcut.wordDel')}`,
       `<kbd>⇧Enter</kbd> ${t('shortcut.newline')}`,
+      `<kbd>DblClick</kbd> ${t('shortcut.maximize')}`,
     ].map(item => `<span class="shortcut-guide__item">${item}</span>`).join('');
   }
 
