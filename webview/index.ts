@@ -38,6 +38,11 @@ const shortcutGuide = new ShortcutGuide(app);
 const rateLimitBar = new RateLimitBar(app, openFolder);
 
 let focusedPaneId: string | null = null;
+let maximizedPaneId: string | null = null;
+
+// 完了通知用: ペインごとの最終出力時刻とタイマー
+const outputTimers = new Map<string, ReturnType<typeof setTimeout>>();
+const IDLE_THRESHOLD_MS = 3000; // 出力停止後3秒で「完了」と判定
 
 function postMessage(msg: WebviewToHostMessage): void {
   vscode.postMessage(msg);
@@ -65,6 +70,75 @@ function updateView(): void {
       }
     });
   }
+}
+
+// ============================================================
+// ペイン最大化/復元
+// ============================================================
+
+function toggleMaximize(id: string): void {
+  if (maximizedPaneId === id) {
+    // 復元: すべてのペインを表示し、グリッドを元に戻す
+    maximizedPaneId = null;
+    for (const p of panes.values()) {
+      p.element.classList.remove('terminal-pane--maximized');
+      p.element.style.display = '';
+    }
+    grid.update(panes.size);
+    focusPane(id);
+    requestAnimationFrame(() => {
+      for (const p of panes.values()) {
+        p.fit();
+      }
+    });
+  } else {
+    // 最大化: 対象ペインのみ表示
+    maximizedPaneId = id;
+    for (const p of panes.values()) {
+      if (p.id === id) {
+        p.element.style.display = '';
+        p.element.classList.add('terminal-pane--maximized');
+      } else {
+        p.element.style.display = 'none';
+        p.element.classList.remove('terminal-pane--maximized');
+      }
+    }
+    // グリッドを1x1に
+    terminalContainer.style.gridTemplateColumns = '1fr';
+    terminalContainer.style.gridTemplateRows = '1fr';
+    focusPane(id);
+    requestAnimationFrame(() => {
+      panes.get(id)?.fit();
+    });
+  }
+}
+
+function restoreFromMaximize(): void {
+  if (maximizedPaneId) {
+    toggleMaximize(maximizedPaneId);
+  }
+}
+
+// ============================================================
+// 完了通知（パネル非アクティブ時）
+// ============================================================
+
+function scheduleCompletionNotification(terminalId: string): void {
+  // 既存タイマーをリセット
+  const existing = outputTimers.get(terminalId);
+  if (existing) clearTimeout(existing);
+
+  const timer = setTimeout(() => {
+    outputTimers.delete(terminalId);
+    // パネルが非アクティブ（フォーカスが別タブにある）時のみ通知
+    if (document.hidden) {
+      const pane = panes.get(terminalId);
+      const dirName = pane?.directory.split('/').pop() || 'Terminal';
+      postMessage({ type: 'notifyCompletion', terminalId, directory: dirName });
+    }
+  }, IDLE_THRESHOLD_MS);
+
+  outputTimers.set(terminalId, timer);
 }
 
 // グリッド方向ナビゲーション
@@ -145,7 +219,8 @@ window.addEventListener('message', (event: MessageEvent<HostToWebviewMessage>) =
         terminalContainer,
         postMessage,
         (id) => focusPane(id),
-        keyHandler
+        keyHandler,
+        (id) => toggleMaximize(id)
       );
       panes.set(msg.terminalId, pane);
       paneOrder.push(msg.terminalId);
@@ -157,11 +232,23 @@ window.addEventListener('message', (event: MessageEvent<HostToWebviewMessage>) =
     }
     case 'terminalOutput': {
       panes.get(msg.terminalId)?.write(msg.data);
+      scheduleCompletionNotification(msg.terminalId);
       break;
     }
     case 'terminalClosed': {
       const pane = panes.get(msg.terminalId);
       if (pane) {
+        // 最大化中のペインが閉じられたら復元
+        if (maximizedPaneId === msg.terminalId) {
+          maximizedPaneId = null;
+          for (const p of panes.values()) {
+            p.element.classList.remove('terminal-pane--maximized');
+            p.element.style.display = '';
+          }
+        }
+        // 通知タイマーをクリア
+        const timer = outputTimers.get(msg.terminalId);
+        if (timer) { clearTimeout(timer); outputTimers.delete(msg.terminalId); }
         pane.destroy();
         panes.delete(msg.terminalId);
         paneOrder = paneOrder.filter((id) => id !== msg.terminalId);
@@ -213,6 +300,12 @@ window.addEventListener('message', (event: MessageEvent<HostToWebviewMessage>) =
       }
       break;
     }
+    case 'toggleMaximize': {
+      if (focusedPaneId) {
+        toggleMaximize(focusedPaneId);
+      }
+      break;
+    }
     case 'setLocale': {
       setI18nLocale(msg.locale);
       baseScreen.updateLocale();
@@ -226,6 +319,14 @@ window.addEventListener('message', (event: MessageEvent<HostToWebviewMessage>) =
 // documentレベルでショートカットキーをキャプチャ（フォールバック）
 // VSCodeのkeybindingシステムが主だが、webviewに直接届く場合のバックアップ
 document.addEventListener('keydown', (e: KeyboardEvent) => {
+  // Escape: 最大化モードを解除
+  if (e.key === 'Escape' && maximizedPaneId) {
+    e.preventDefault();
+    e.stopPropagation();
+    restoreFromMaximize();
+    return;
+  }
+
   // Shift+Enter: Claude CLIで改行（LF送信）
   if (e.key === 'Enter' && e.shiftKey && !e.metaKey && !e.ctrlKey) {
     e.preventDefault();

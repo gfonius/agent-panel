@@ -65,6 +65,10 @@
       {
         "command": "agentPanel.deleteWordBack",
         "title": "Agent Panel: Delete Word Back"
+      },
+      {
+        "command": "agentPanel.toggleMaximize",
+        "title": "Agent Panel: Toggle Maximize Pane"
       }
     ],
     "keybindings": [

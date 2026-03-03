@@ -10,6 +10,7 @@ import {
   COMMAND_OPEN_VSCODE_TERMINAL,
   COMMAND_OPEN_EXPLORER,
   COMMAND_DELETE_WORD_BACK,
+  COMMAND_TOGGLE_MAXIMIZE,
 } from './constants';
 import { StatusBarManager } from './managers/StatusBarManager';
 import { PanelManager } from './managers/PanelManager';
@@ -142,6 +143,22 @@ export function activate(context: vscode.ExtensionContext) {
       case 'requestRateLimit':
         updateRateLimit();
         break;
+      case 'notifyCompletion': {
+        // パネルが非アクティブ時にデスクトップ通知を表示
+        const panel = panelManager.getPanel();
+        const isActive = panel?.active ?? false;
+        if (!isActive) {
+          vscode.window.showInformationMessage(
+            `Agent Panel: ${msg.directory} ${vscode.env.language.startsWith('ja') ? 'が応答完了' : 'completed response'}`,
+            'Show'
+          ).then((choice) => {
+            if (choice === 'Show') {
+              panelManager.reveal();
+            }
+          });
+        }
+        break;
+      }
     }
   }
 
@@ -241,10 +258,13 @@ export function activate(context: vscode.ExtensionContext) {
   const deleteWordBackCmd = vscode.commands.registerCommand(COMMAND_DELETE_WORD_BACK, () => {
     panelManager.postMessage({ type: 'deleteWordBack' });
   });
+  const toggleMaximizeCmd = vscode.commands.registerCommand(COMMAND_TOGGLE_MAXIMIZE, () => {
+    panelManager.postMessage({ type: 'toggleMaximize' });
+  });
   context.subscriptions.push(
     openCommand, newTerminalCommand,
     focusUpCmd, focusDownCmd, focusLeftCmd, focusRightCmd,
-    closeTermCmd, openVscTermCmd, openExplorerCmd, deleteWordBackCmd,
+    closeTermCmd, openVscTermCmd, openExplorerCmd, deleteWordBackCmd, toggleMaximizeCmd,
     {
       dispose: () => {
         if (rateLimitInterval) {
