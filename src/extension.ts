@@ -143,22 +143,6 @@ export function activate(context: vscode.ExtensionContext) {
       case 'requestRateLimit':
         updateRateLimit();
         break;
-      case 'notifyCompletion': {
-        // パネルが非アクティブ時にデスクトップ通知を表示
-        const panel = panelManager.getPanel();
-        const isActive = panel?.active ?? false;
-        if (!isActive) {
-          vscode.window.showInformationMessage(
-            `Agent Panel: ${msg.directory} ${vscode.env.language.startsWith('ja') ? 'が応答完了' : 'completed response'}`,
-            'Show'
-          ).then((choice) => {
-            if (choice === 'Show') {
-              panelManager.reveal();
-            }
-          });
-        }
-        break;
-      }
     }
   }
 

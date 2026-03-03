@@ -28,4 +28,3 @@ export type WebviewToHostMessage =
   | { type: 'openVscodeTerminal'; directory: string }
   | { type: 'openExplorer'; directory: string }
   | { type: 'requestFolderPicker' }
-  | { type: 'notifyCompletion'; terminalId: string; directory: string }

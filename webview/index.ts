@@ -40,10 +40,6 @@ const rateLimitBar = new RateLimitBar(app, openFolder);
 let focusedPaneId: string | null = null;
 let maximizedPaneId: string | null = null;
 
-// 完了通知用: ペインごとの最終出力時刻とタイマー
-const outputTimers = new Map<string, ReturnType<typeof setTimeout>>();
-const IDLE_THRESHOLD_MS = 3000; // 出力停止後3秒で「完了」と判定
-
 function postMessage(msg: WebviewToHostMessage): void {
   vscode.postMessage(msg);
 }
@@ -111,34 +107,6 @@ function toggleMaximize(id: string): void {
       panes.get(id)?.fit();
     });
   }
-}
-
-function restoreFromMaximize(): void {
-  if (maximizedPaneId) {
-    toggleMaximize(maximizedPaneId);
-  }
-}
-
-// ============================================================
-// 完了通知（パネル非アクティブ時）
-// ============================================================
-
-function scheduleCompletionNotification(terminalId: string): void {
-  // 既存タイマーをリセット
-  const existing = outputTimers.get(terminalId);
-  if (existing) clearTimeout(existing);
-
-  const timer = setTimeout(() => {
-    outputTimers.delete(terminalId);
-    // パネルが非アクティブ（フォーカスが別タブにある）時のみ通知
-    if (document.hidden) {
-      const pane = panes.get(terminalId);
-      const dirName = pane?.directory.split('/').pop() || 'Terminal';
-      postMessage({ type: 'notifyCompletion', terminalId, directory: dirName });
-    }
-  }, IDLE_THRESHOLD_MS);
-
-  outputTimers.set(terminalId, timer);
 }
 
 // グリッド方向ナビゲーション
@@ -232,7 +200,6 @@ window.addEventListener('message', (event: MessageEvent<HostToWebviewMessage>) =
     }
     case 'terminalOutput': {
       panes.get(msg.terminalId)?.write(msg.data);
-      scheduleCompletionNotification(msg.terminalId);
       break;
     }
     case 'terminalClosed': {
@@ -246,9 +213,6 @@ window.addEventListener('message', (event: MessageEvent<HostToWebviewMessage>) =
             p.element.style.display = '';
           }
         }
-        // 通知タイマーをクリア
-        const timer = outputTimers.get(msg.terminalId);
-        if (timer) { clearTimeout(timer); outputTimers.delete(msg.terminalId); }
         pane.destroy();
         panes.delete(msg.terminalId);
         paneOrder = paneOrder.filter((id) => id !== msg.terminalId);
@@ -319,14 +283,6 @@ window.addEventListener('message', (event: MessageEvent<HostToWebviewMessage>) =
 // documentレベルでショートカットキーをキャプチャ（フォールバック）
 // VSCodeのkeybindingシステムが主だが、webviewに直接届く場合のバックアップ
 document.addEventListener('keydown', (e: KeyboardEvent) => {
-  // Escape: 最大化モードを解除
-  if (e.key === 'Escape' && maximizedPaneId) {
-    e.preventDefault();
-    e.stopPropagation();
-    restoreFromMaximize();
-    return;
-  }
-
   // Shift+Enter: Claude CLIで改行（LF送信）
   if (e.key === 'Enter' && e.shiftKey && !e.metaKey && !e.ctrlKey) {
     e.preventDefault();
