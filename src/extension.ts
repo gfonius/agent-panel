@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import {
   COMMAND_OPEN,
   COMMAND_NEW_TERMINAL,
@@ -143,6 +144,26 @@ export function activate(context: vscode.ExtensionContext) {
       case 'requestRateLimit':
         updateRateLimit();
         break;
+      case 'openFile': {
+        const resolved = path.isAbsolute(msg.filePath)
+          ? msg.filePath
+          : path.resolve(msg.directory, msg.filePath);
+        const fileUri = vscode.Uri.file(resolved);
+        const options: vscode.TextDocumentShowOptions = { preview: true };
+        if (msg.line !== undefined) {
+          const line = Math.max(0, msg.line - 1);
+          const col = msg.column ? Math.max(0, msg.column - 1) : 0;
+          options.selection = new vscode.Range(line, col, line, col);
+        }
+        vscode.window.showTextDocument(fileUri, options).then(undefined, () => {
+          vscode.window.showWarningMessage(`ファイルを開けません: ${resolved}`);
+        });
+        break;
+      }
+      case 'openUrl': {
+        vscode.env.openExternal(vscode.Uri.parse(msg.url));
+        break;
+      }
     }
   }
 

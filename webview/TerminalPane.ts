@@ -2,6 +2,7 @@ import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { WebglAddon } from '@xterm/addon-webgl';
 import type { WebviewToHostMessage } from '../src/protocol/messages';
+import { createFilePathLinkProvider, createUrlLinkProvider } from './linkProvider';
 
 export class TerminalPane {
   readonly id: string;
@@ -105,6 +106,14 @@ export class TerminalPane {
     } catch {
       // canvas renderer にフォールバック
     }
+
+    // ファイルパス・URLのリンクプロバイダー登録（Cmd/Ctrl+Click で開く）
+    this.terminal.registerLinkProvider(
+      createFilePathLinkProvider(this.terminal, this.directory, postMessage)
+    );
+    this.terminal.registerLinkProvider(
+      createUrlLinkProvider(this.terminal, postMessage)
+    );
 
     // カスタムキーイベントハンドラを登録
     if (keyHandler) {

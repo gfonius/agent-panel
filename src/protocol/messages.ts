@@ -28,3 +28,5 @@ export type WebviewToHostMessage =
   | { type: 'openVscodeTerminal'; directory: string }
   | { type: 'openExplorer'; directory: string }
   | { type: 'requestFolderPicker' }
+  | { type: 'openFile'; filePath: string; directory: string; line?: number; column?: number }
+  | { type: 'openUrl'; url: string }
