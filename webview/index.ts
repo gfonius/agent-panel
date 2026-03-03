@@ -6,7 +6,7 @@ import { TerminalGrid } from './TerminalGrid';
 import { KeyboardHandler } from './KeyboardHandler';
 import { RateLimitBar } from './RateLimitBar';
 import { ShortcutGuide } from './ShortcutGuide';
-import { setLocale as setI18nLocale } from './i18n';
+import { setLocale as setI18nLocale, t } from './i18n';
 import { reorderPaneIds } from './paneOrderUtils';
 import { extractFilePaths } from './fileDropUtils';
 import type { HostToWebviewMessage, WebviewToHostMessage } from '../src/protocol/messages';
@@ -30,12 +30,16 @@ function openFolder(): void {
   vscode.postMessage({ type: 'requestFolderPicker' });
 }
 
+function quit(): void {
+  vscode.postMessage({ type: 'requestQuit' } as WebviewToHostMessage);
+}
+
 const baseScreen = new BaseScreen(app, openFolder);
 const panes = new Map<string, TerminalPane>();
 let paneOrder: string[] = []; // ペインの表示順序（挿入順に依存しない独立管理）
 const grid = new TerminalGrid(terminalContainer);
 const shortcutGuide = new ShortcutGuide(app);
-const rateLimitBar = new RateLimitBar(app, openFolder);
+const rateLimitBar = new RateLimitBar(app, openFolder, quit);
 
 let focusedPaneId: string | null = null;
 let maximizedPaneId: string | null = null;
@@ -268,6 +272,13 @@ window.addEventListener('message', (event: MessageEvent<HostToWebviewMessage>) =
       if (focusedPaneId) {
         toggleMaximize(focusedPaneId);
       }
+      break;
+    }
+    case 'quitting': {
+      const overlay = document.createElement('div');
+      overlay.className = 'quit-overlay';
+      overlay.innerHTML = `<div class="quit-overlay__spinner"></div><span>${t('quit.overlay')}</span>`;
+      document.body.appendChild(overlay);
       break;
     }
     case 'setLocale': {

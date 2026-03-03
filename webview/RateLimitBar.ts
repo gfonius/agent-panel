@@ -15,7 +15,7 @@ export class RateLimitBar {
   private errorMessage: HTMLElement;
   private updateInterval: number | undefined;
 
-  constructor(container: HTMLElement, onOpenFolder?: () => void) {
+  constructor(container: HTMLElement, onOpenFolder?: () => void, onQuit?: () => void) {
     this.element = document.createElement('div');
     this.element.className = 'rate-limit-bar';
     this.element.innerHTML = `
@@ -48,6 +48,7 @@ export class RateLimitBar {
           <div class="rate-limit-bar__error" style="display:none">${t('rate.error')}</div>
         </div>
         <button class="rate-limit-bar__add" title="${t('rate.addTitle')}">+</button>
+        <button class="rate-limit-bar__quit" title="${t('rate.quitTitle')}">⏻</button>
       </div>
     `;
     container.appendChild(this.element);
@@ -55,6 +56,11 @@ export class RateLimitBar {
     if (onOpenFolder) {
       const addBtn = this.element.querySelector('.rate-limit-bar__add')!;
       addBtn.addEventListener('click', onOpenFolder);
+    }
+
+    if (onQuit) {
+      const quitBtn = this.element.querySelector('.rate-limit-bar__quit')!;
+      quitBtn.addEventListener('click', onQuit);
     }
 
     this.fiveHourBar = this.element.querySelector('[data-bar="five-hour"]')!;
@@ -164,6 +170,8 @@ export class RateLimitBar {
     this.errorMessage.textContent = t('rate.error');
     const addBtn = this.element.querySelector('.rate-limit-bar__add')!;
     (addBtn as HTMLElement).title = t('rate.addTitle');
+    const quitBtn = this.element.querySelector('.rate-limit-bar__quit');
+    if (quitBtn) (quitBtn as HTMLElement).title = t('rate.quitTitle');
   }
 
   destroy(): void {

@@ -16,6 +16,7 @@ export type HostToWebviewMessage =
   | { type: 'deleteWordBack' }
   | { type: 'setLocale'; locale: string }
   | { type: 'toggleMaximize' }
+  | { type: 'quitting' }
 
 // Webview → Host
 export type WebviewToHostMessage =
@@ -30,3 +31,4 @@ export type WebviewToHostMessage =
   | { type: 'requestFolderPicker' }
   | { type: 'openFile'; filePath: string; directory: string; line?: number; column?: number }
   | { type: 'openUrl'; url: string }
+  | { type: 'requestQuit' }
