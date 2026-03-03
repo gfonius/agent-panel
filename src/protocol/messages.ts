@@ -25,3 +25,5 @@ export type WebviewToHostMessage =
   | { type: 'requestRateLimit' }
   | { type: 'openVscodeTerminal'; directory: string }
   | { type: 'requestFolderPicker' }
+  | { type: 'openFile'; filePath: string; directory: string; line?: number; column?: number }
+  | { type: 'openUrl'; url: string }
