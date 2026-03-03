@@ -21,6 +21,29 @@ const FILE_PATH_REGEX = new RegExp(
 // URL正規表現
 const URL_REGEX = /https?:\/\/[^\s'")\]}>]+/g;
 
+// 切り詰められたURL正規表現 (例: …ps://github.com/xxx)
+// …（U+2026）に続いて0-5文字の小文字、その後://と残りのURL
+const TRUNCATED_URL_REGEX = /…([a-z]{0,5}):\/\/[^\s'")\]}>]+/g;
+
+/**
+ * 切り詰められたURLのプロトコル部分を推定して復元する。
+ * partial はコロンの前にある文字列 (例: "ps", "tps", "s", "", "p")。
+ */
+function reconstructProtocol(partial: string): string {
+  const https = 'https';
+  // partial が https の末尾と一致するか確認
+  if (partial.length > 0 && https.endsWith(partial)) {
+    return 'https://';
+  }
+  // partial が http の末尾と一致し、かつ https の末尾ではない場合
+  const http = 'http';
+  if (partial.length > 0 && http.endsWith(partial) && !https.endsWith(partial)) {
+    return 'http://';
+  }
+  // デフォルトは https
+  return 'https://';
+}
+
 export interface FilePathMatch {
   path: string;
   line?: number;
@@ -71,6 +94,25 @@ export function findUrlsInLine(lineText: string): Array<{ url: string; startInde
       endIndex: match.index + match[0].length,
     });
   }
+
+  // 切り詰められたURLを検出して復元
+  TRUNCATED_URL_REGEX.lastIndex = 0;
+  while ((match = TRUNCATED_URL_REGEX.exec(lineText)) !== null) {
+    const partial = match[1]; // …の後、://の前の文字列
+    const protocol = reconstructProtocol(partial);
+    // マッチ全体から …[partial]:// の部分を除いてURLのホスト以降を取得
+    const afterProtocol = match[0].slice(1 + partial.length + 3); // …, partial, :// を除く
+    const reconstructedUrl = protocol + afterProtocol;
+
+    results.push({
+      url: reconstructedUrl,
+      startIndex: match.index,
+      endIndex: match.index + match[0].length,
+    });
+  }
+
+  // startIndex 順にソート
+  results.sort((a, b) => a.startIndex - b.startIndex);
 
   return results;
 }

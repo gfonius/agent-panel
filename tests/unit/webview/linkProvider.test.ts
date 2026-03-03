@@ -178,3 +178,66 @@ describe('findUrlsInLine', () => {
     expect(results).toHaveLength(0);
   });
 });
+
+describe('findUrlsInLine - truncated URL detection', () => {
+  it('reconstructs https URL from …ps:// prefix', () => {
+    const results = findUrlsInLine('…ps://github.com/freee/api');
+    expect(results).toHaveLength(1);
+    expect(results[0].url).toBe('https://github.com/freee/api');
+  });
+
+  it('reconstructs https URL from …tps:// prefix', () => {
+    const results = findUrlsInLine('…tps://example.com/path');
+    expect(results).toHaveLength(1);
+    expect(results[0].url).toBe('https://example.com/path');
+  });
+
+  it('reconstructs https URL from …s:// prefix', () => {
+    const results = findUrlsInLine('…s://example.com/path');
+    expect(results).toHaveLength(1);
+    expect(results[0].url).toBe('https://example.com/path');
+  });
+
+  it('reconstructs https URL from …:// prefix (no letters between ellipsis and ://)', () => {
+    const results = findUrlsInLine('…://example.com/path');
+    expect(results).toHaveLength(1);
+    expect(results[0].url).toBe('https://example.com/path');
+  });
+
+  it('reconstructs http URL from …p:// prefix', () => {
+    const results = findUrlsInLine('…p://example.com/path');
+    expect(results).toHaveLength(1);
+    expect(results[0].url).toBe('http://example.com/path');
+  });
+
+  it('reconstructs URL embedded in text, stripping trailing )', () => {
+    const results = findUrlsInLine('Fetching…ps://github.com/repo)');
+    expect(results).toHaveLength(1);
+    expect(results[0].url).toBe('https://github.com/repo');
+  });
+
+  it('reports correct startIndex and endIndex for truncated URL', () => {
+    // "…ps://github.com/freee/api"
+    // … is at index 0, endIndex should be end of the match in the original line
+    const line = '…ps://github.com/freee/api';
+    const results = findUrlsInLine(line);
+    expect(results).toHaveLength(1);
+    expect(results[0].startIndex).toBe(0);
+    expect(results[0].endIndex).toBe(line.length);
+  });
+
+  it('reports correct startIndex when truncated URL is preceded by text', () => {
+    const line = 'Fetching…ps://github.com/repo)';
+    const results = findUrlsInLine(line);
+    expect(results).toHaveLength(1);
+    // startIndex should be the position of '…' in the original line
+    expect(results[0].startIndex).toBe(8); // 'Fetching' = 8 chars
+    // endIndex should point to end of URL (before ')')
+    expect(results[0].endIndex).toBe(line.length - 1);
+  });
+
+  it('reconstructed URL is the clickable url field', () => {
+    const results = findUrlsInLine('…ps://github.com/freee/api');
+    expect(results[0].url).toMatch(/^https:\/\//);
+  });
+});
