@@ -8,6 +8,7 @@ import {
   COMMAND_FOCUS_RIGHT,
   COMMAND_CLOSE_TERMINAL,
   COMMAND_OPEN_VSCODE_TERMINAL,
+  COMMAND_OPEN_EXPLORER,
   COMMAND_DELETE_WORD_BACK,
 } from './constants';
 import { StatusBarManager } from './managers/StatusBarManager';
@@ -134,6 +135,10 @@ export function activate(context: vscode.ExtensionContext) {
         terminal.show();
         break;
       }
+      case 'openExplorer': {
+        vscode.env.openExternal(vscode.Uri.file(msg.directory));
+        break;
+      }
       case 'requestRateLimit':
         updateRateLimit();
         break;
@@ -230,13 +235,16 @@ export function activate(context: vscode.ExtensionContext) {
   const openVscTermCmd = vscode.commands.registerCommand(COMMAND_OPEN_VSCODE_TERMINAL, () => {
     panelManager.postMessage({ type: 'openActiveInVscodeTerminal' });
   });
+  const openExplorerCmd = vscode.commands.registerCommand(COMMAND_OPEN_EXPLORER, () => {
+    panelManager.postMessage({ type: 'openActiveInExplorer' });
+  });
   const deleteWordBackCmd = vscode.commands.registerCommand(COMMAND_DELETE_WORD_BACK, () => {
     panelManager.postMessage({ type: 'deleteWordBack' });
   });
   context.subscriptions.push(
     openCommand, newTerminalCommand,
     focusUpCmd, focusDownCmd, focusLeftCmd, focusRightCmd,
-    closeTermCmd, openVscTermCmd, deleteWordBackCmd,
+    closeTermCmd, openVscTermCmd, openExplorerCmd, deleteWordBackCmd,
     {
       dispose: () => {
         if (rateLimitInterval) {
