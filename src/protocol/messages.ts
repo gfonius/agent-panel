@@ -15,6 +15,7 @@ export type HostToWebviewMessage =
   | { type: 'openActiveInExplorer' }
   | { type: 'deleteWordBack' }
   | { type: 'setLocale'; locale: string }
+  | { type: 'toggleMaximize' }
 
 // Webview → Host
 export type WebviewToHostMessage =
