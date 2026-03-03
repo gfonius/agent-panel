@@ -17,6 +17,7 @@ export class TerminalManager {
   private terminals: Map<string, TerminalProcess> = new Map();
   private onData: (terminalId: string, data: string) => void;
   private onExit: (terminalId: string) => void;
+  private suppressExitNotifications = false;
 
   constructor(
     onData: (terminalId: string, data: string) => void,
@@ -50,7 +51,9 @@ export class TerminalManager {
 
     ptyProcess.onExit(() => {
       this.terminals.delete(id);
-      this.onExit(id);
+      if (!this.suppressExitNotifications) {
+        this.onExit(id);
+      }
     });
 
     this.terminals.set(id, { id, pty: ptyProcess, directory });
@@ -114,7 +117,10 @@ export class TerminalManager {
       });
 
       // /exit を送信してClaude CLIにセッション情報を出力させる
-      terminal.pty.write('/exit\n');
+      // Claude CLIのTUIはオートコンプリートを表示するため、
+      // テキスト入力後に少し待ってからEnterを送信する
+      terminal.pty.write('/exit');
+      setTimeout(() => terminal.pty.write('\r'), 200);
 
       // 5秒待ってからresume IDを解析
       setTimeout(() => {
@@ -132,15 +138,13 @@ export class TerminalManager {
    * 全ターミナルをgracefulに閉じてセッション情報を返す
    */
   async gracefulDisposeAll(): Promise<Array<{ directory: string; resumeId?: string; gridPosition: number }>> {
-    const results: Array<{ directory: string; resumeId?: string; gridPosition: number }> = [];
+    this.suppressExitNotifications = true;
     const entries = Array.from(this.terminals.entries());
-
-    for (let i = 0; i < entries.length; i++) {
-      const [id] = entries[i];
-      const result = await this.gracefulClose(id);
-      results.push({ ...result, gridPosition: i });
-    }
-
+    const promises = entries.map(([id], i) =>
+      this.gracefulClose(id).then((result) => ({ ...result, gridPosition: i }))
+    );
+    const results = await Promise.all(promises);
+    this.suppressExitNotifications = false;
     return results;
   }
 
