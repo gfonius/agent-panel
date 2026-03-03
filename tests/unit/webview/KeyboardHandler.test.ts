@@ -17,6 +17,7 @@ describe('KeyboardHandler', () => {
   let focusDirection: ReturnType<typeof vi.fn>;
   let closeFocused: ReturnType<typeof vi.fn>;
   let openVscodeTerminal: ReturnType<typeof vi.fn>;
+  let openExplorer: ReturnType<typeof vi.fn>;
   let handler: ReturnType<KeyboardHandler['getKeyHandler']>;
 
   beforeEach(() => {
@@ -24,12 +25,14 @@ describe('KeyboardHandler', () => {
     focusDirection = vi.fn();
     closeFocused = vi.fn();
     openVscodeTerminal = vi.fn();
+    openExplorer = vi.fn();
 
     const kb = new KeyboardHandler({
       postMessage,
       focusDirection,
       closeFocused,
       openVscodeTerminal,
+      openExplorer,
     });
     handler = kb.getKeyHandler();
   });
@@ -89,6 +92,12 @@ describe('KeyboardHandler', () => {
       expect(openVscodeTerminal).not.toHaveBeenCalled();
     });
 
+    it('Ctrl+F returns true and does NOT call openExplorer', () => {
+      const e = makeEvent({ ctrlKey: true, key: 'f' });
+      expect(handler(e)).toBe(true);
+      expect(openExplorer).not.toHaveBeenCalled();
+    });
+
     it('Ctrl+N returns true and does NOT post requestFolderPicker', () => {
       const e = makeEvent({ ctrlKey: true, key: 'n' });
       expect(handler(e)).toBe(true);
@@ -101,6 +110,14 @@ describe('KeyboardHandler', () => {
       const e = makeEvent({ metaKey: true, key: 't' });
       expect(handler(e)).toBe(false);
       expect(openVscodeTerminal).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('Cmd+F (metaKey)', () => {
+    it('returns false and calls openExplorer', () => {
+      const e = makeEvent({ metaKey: true, key: 'f' });
+      expect(handler(e)).toBe(false);
+      expect(openExplorer).toHaveBeenCalledOnce();
     });
   });
 

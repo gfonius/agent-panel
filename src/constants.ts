@@ -9,6 +9,7 @@ export const COMMAND_FOCUS_DOWN = 'agentPanel.focusDown';
 export const COMMAND_FOCUS_LEFT = 'agentPanel.focusLeft';
 export const COMMAND_FOCUS_RIGHT = 'agentPanel.focusRight';
 export const COMMAND_OPEN_VSCODE_TERMINAL = 'agentPanel.openVscodeTerminal';
+export const COMMAND_OPEN_EXPLORER = 'agentPanel.openExplorer';
 export const COMMAND_DELETE_WORD_BACK = 'agentPanel.deleteWordBack';
 export const EXTENSION_ID = 'agent-panel';
 export const SESSION_STORAGE_KEY = 'agentPanel.sessions';

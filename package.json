@@ -59,6 +59,10 @@
         "title": "Agent Panel: Open in VSCode Terminal"
       },
       {
+        "command": "agentPanel.openExplorer",
+        "title": "Agent Panel: Open in File Explorer"
+      },
+      {
         "command": "agentPanel.deleteWordBack",
         "title": "Agent Panel: Delete Word Back"
       }
@@ -104,6 +108,12 @@
         "command": "agentPanel.openVscodeTerminal",
         "key": "ctrl+t",
         "mac": "cmd+t",
+        "when": "agentPanel.active"
+      },
+      {
+        "command": "agentPanel.openExplorer",
+        "key": "ctrl+f",
+        "mac": "cmd+f",
         "when": "agentPanel.active"
       },
       {
