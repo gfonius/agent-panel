@@ -115,11 +115,21 @@ function openVscodeTerminalForFocused(): void {
   }
 }
 
+function openExplorerForFocused(): void {
+  if (focusedPaneId) {
+    const pane = panes.get(focusedPaneId);
+    if (pane) {
+      postMessage({ type: 'openExplorer', directory: pane.directory });
+    }
+  }
+}
+
 const keyboardHandler = new KeyboardHandler({
   postMessage: (msg) => postMessage(msg as WebviewToHostMessage),
   focusDirection,
   closeFocused: closeFocusedPane,
   openVscodeTerminal: openVscodeTerminalForFocused,
+  openExplorer: openExplorerForFocused,
 });
 
 const keyHandler = keyboardHandler.getKeyHandler();
@@ -191,6 +201,10 @@ window.addEventListener('message', (event: MessageEvent<HostToWebviewMessage>) =
     }
     case 'openActiveInVscodeTerminal': {
       openVscodeTerminalForFocused();
+      break;
+    }
+    case 'openActiveInExplorer': {
+      openExplorerForFocused();
       break;
     }
     case 'deleteWordBack': {
@@ -319,6 +333,14 @@ document.addEventListener('keydown', (e: KeyboardEvent) => {
     e.preventDefault();
     e.stopPropagation();
     openVscodeTerminalForFocused();
+    return;
+  }
+
+  // Cmd+F: Finder/エクスプローラーで開く
+  if (e.metaKey && e.key === 'f' && !e.shiftKey) {
+    e.preventDefault();
+    e.stopPropagation();
+    openExplorerForFocused();
     return;
   }
 
