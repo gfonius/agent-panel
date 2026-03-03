@@ -16,6 +16,8 @@ const translations: Record<Locale, Record<string, string>> = {
     'shortcut.newline': 'Newline',
     'shortcut.maximize': 'Maximize',
     'notification.completed': 'completed response',
+    'rate.quitTitle': 'Quit & Save',
+    'quit.overlay': 'Saving sessions...',
   },
   ja: {
     'base.subtitle': 'クリックまたは <kbd>Cmd+N</kbd> でフォルダーを選択',
@@ -32,6 +34,8 @@ const translations: Record<Locale, Record<string, string>> = {
     'shortcut.newline': '改行',
     'shortcut.maximize': '最大化',
     'notification.completed': 'が応答完了',
+    'rate.quitTitle': '終了&保存',
+    'quit.overlay': 'セッション保存中...',
   },
 };
 
