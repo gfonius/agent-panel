@@ -2,7 +2,7 @@
   "name": "agent-panel",
   "displayName": "Agent Panel",
   "description": "Manage multiple terminals in a grid layout",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publisher": "gfonius",
   "license": "MIT",
   "icon": "images/icon.png",
