@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import {
   COMMAND_OPEN,
   COMMAND_NEW_TERMINAL,
@@ -8,7 +9,9 @@ import {
   COMMAND_FOCUS_RIGHT,
   COMMAND_CLOSE_TERMINAL,
   COMMAND_OPEN_VSCODE_TERMINAL,
+  COMMAND_OPEN_EXPLORER,
   COMMAND_DELETE_WORD_BACK,
+  COMMAND_TOGGLE_MAXIMIZE,
 } from './constants';
 import { StatusBarManager } from './managers/StatusBarManager';
 import { PanelManager } from './managers/PanelManager';
@@ -134,9 +137,33 @@ export function activate(context: vscode.ExtensionContext) {
         terminal.show();
         break;
       }
+      case 'openExplorer': {
+        vscode.env.openExternal(vscode.Uri.file(msg.directory));
+        break;
+      }
       case 'requestRateLimit':
         updateRateLimit();
         break;
+      case 'openFile': {
+        const resolved = path.isAbsolute(msg.filePath)
+          ? msg.filePath
+          : path.resolve(msg.directory, msg.filePath);
+        const fileUri = vscode.Uri.file(resolved);
+        const options: vscode.TextDocumentShowOptions = { preview: true };
+        if (msg.line !== undefined) {
+          const line = Math.max(0, msg.line - 1);
+          const col = msg.column ? Math.max(0, msg.column - 1) : 0;
+          options.selection = new vscode.Range(line, col, line, col);
+        }
+        vscode.window.showTextDocument(fileUri, options).then(undefined, () => {
+          vscode.window.showWarningMessage(`ファイルを開けません: ${resolved}`);
+        });
+        break;
+      }
+      case 'openUrl': {
+        vscode.env.openExternal(vscode.Uri.parse(msg.url));
+        break;
+      }
     }
   }
 
@@ -230,13 +257,19 @@ export function activate(context: vscode.ExtensionContext) {
   const openVscTermCmd = vscode.commands.registerCommand(COMMAND_OPEN_VSCODE_TERMINAL, () => {
     panelManager.postMessage({ type: 'openActiveInVscodeTerminal' });
   });
+  const openExplorerCmd = vscode.commands.registerCommand(COMMAND_OPEN_EXPLORER, () => {
+    panelManager.postMessage({ type: 'openActiveInExplorer' });
+  });
   const deleteWordBackCmd = vscode.commands.registerCommand(COMMAND_DELETE_WORD_BACK, () => {
     panelManager.postMessage({ type: 'deleteWordBack' });
+  });
+  const toggleMaximizeCmd = vscode.commands.registerCommand(COMMAND_TOGGLE_MAXIMIZE, () => {
+    panelManager.postMessage({ type: 'toggleMaximize' });
   });
   context.subscriptions.push(
     openCommand, newTerminalCommand,
     focusUpCmd, focusDownCmd, focusLeftCmd, focusRightCmd,
-    closeTermCmd, openVscTermCmd, deleteWordBackCmd,
+    closeTermCmd, openVscTermCmd, openExplorerCmd, deleteWordBackCmd, toggleMaximizeCmd,
     {
       dispose: () => {
         if (rateLimitInterval) {

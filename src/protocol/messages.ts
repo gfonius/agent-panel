@@ -12,8 +12,10 @@ export type HostToWebviewMessage =
   | { type: 'focusDirection'; direction: 'up' | 'down' | 'left' | 'right' }
   | { type: 'closeActiveTerminal' }
   | { type: 'openActiveInVscodeTerminal' }
+  | { type: 'openActiveInExplorer' }
   | { type: 'deleteWordBack' }
   | { type: 'setLocale'; locale: string }
+  | { type: 'toggleMaximize' }
 
 // Webview → Host
 export type WebviewToHostMessage =
@@ -24,4 +26,7 @@ export type WebviewToHostMessage =
   | { type: 'closeTerminal'; terminalId: string }
   | { type: 'requestRateLimit' }
   | { type: 'openVscodeTerminal'; directory: string }
+  | { type: 'openExplorer'; directory: string }
   | { type: 'requestFolderPicker' }
+  | { type: 'openFile'; filePath: string; directory: string; line?: number; column?: number }
+  | { type: 'openUrl'; url: string }

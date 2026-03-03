@@ -3,17 +3,20 @@ export class KeyboardHandler {
   private focusDirection: (direction: 'up' | 'down' | 'left' | 'right') => void;
   private closeFocused: () => void;
   private openVscodeTerminal: () => void;
+  private openExplorer: () => void;
 
   constructor(options: {
     postMessage: (msg: unknown) => void;
     focusDirection: (direction: 'up' | 'down' | 'left' | 'right') => void;
     closeFocused: () => void;
     openVscodeTerminal: () => void;
+    openExplorer: () => void;
   }) {
     this.postMessage = options.postMessage;
     this.focusDirection = options.focusDirection;
     this.closeFocused = options.closeFocused;
     this.openVscodeTerminal = options.openVscodeTerminal;
+    this.openExplorer = options.openExplorer;
   }
 
   // xterm.js の attachCustomKeyEventHandler に渡す関数を返す
@@ -56,6 +59,12 @@ export class KeyboardHandler {
       // Cmd+T: VSCodeターミナルで開く
       if (e.metaKey && e.key === 't' && !e.shiftKey && e.type === 'keydown') {
         this.openVscodeTerminal();
+        return false;
+      }
+
+      // Cmd+F: Finder/エクスプローラーで開く
+      if (e.metaKey && e.key === 'f' && !e.shiftKey && e.type === 'keydown') {
+        this.openExplorer();
         return false;
       }
 

@@ -38,6 +38,7 @@ const shortcutGuide = new ShortcutGuide(app);
 const rateLimitBar = new RateLimitBar(app, openFolder);
 
 let focusedPaneId: string | null = null;
+let maximizedPaneId: string | null = null;
 
 function postMessage(msg: WebviewToHostMessage): void {
   vscode.postMessage(msg);
@@ -63,6 +64,47 @@ function updateView(): void {
       for (const p of panes.values()) {
         p.fit();
       }
+    });
+  }
+}
+
+// ============================================================
+// ペイン最大化/復元
+// ============================================================
+
+function toggleMaximize(id: string): void {
+  if (maximizedPaneId === id) {
+    // 復元: すべてのペインを表示し、グリッドを元に戻す
+    maximizedPaneId = null;
+    for (const p of panes.values()) {
+      p.element.classList.remove('terminal-pane--maximized');
+      p.element.style.display = '';
+    }
+    grid.update(panes.size);
+    focusPane(id);
+    requestAnimationFrame(() => {
+      for (const p of panes.values()) {
+        p.fit();
+      }
+    });
+  } else {
+    // 最大化: 対象ペインのみ表示
+    maximizedPaneId = id;
+    for (const p of panes.values()) {
+      if (p.id === id) {
+        p.element.style.display = '';
+        p.element.classList.add('terminal-pane--maximized');
+      } else {
+        p.element.style.display = 'none';
+        p.element.classList.remove('terminal-pane--maximized');
+      }
+    }
+    // グリッドを1x1に
+    terminalContainer.style.gridTemplateColumns = '1fr';
+    terminalContainer.style.gridTemplateRows = '1fr';
+    focusPane(id);
+    requestAnimationFrame(() => {
+      panes.get(id)?.fit();
     });
   }
 }
@@ -115,11 +157,21 @@ function openVscodeTerminalForFocused(): void {
   }
 }
 
+function openExplorerForFocused(): void {
+  if (focusedPaneId) {
+    const pane = panes.get(focusedPaneId);
+    if (pane) {
+      postMessage({ type: 'openExplorer', directory: pane.directory });
+    }
+  }
+}
+
 const keyboardHandler = new KeyboardHandler({
   postMessage: (msg) => postMessage(msg as WebviewToHostMessage),
   focusDirection,
   closeFocused: closeFocusedPane,
   openVscodeTerminal: openVscodeTerminalForFocused,
+  openExplorer: openExplorerForFocused,
 });
 
 const keyHandler = keyboardHandler.getKeyHandler();
@@ -135,7 +187,8 @@ window.addEventListener('message', (event: MessageEvent<HostToWebviewMessage>) =
         terminalContainer,
         postMessage,
         (id) => focusPane(id),
-        keyHandler
+        keyHandler,
+        (id) => toggleMaximize(id)
       );
       panes.set(msg.terminalId, pane);
       paneOrder.push(msg.terminalId);
@@ -152,6 +205,14 @@ window.addEventListener('message', (event: MessageEvent<HostToWebviewMessage>) =
     case 'terminalClosed': {
       const pane = panes.get(msg.terminalId);
       if (pane) {
+        // 最大化中のペインが閉じられたら復元
+        if (maximizedPaneId === msg.terminalId) {
+          maximizedPaneId = null;
+          for (const p of panes.values()) {
+            p.element.classList.remove('terminal-pane--maximized');
+            p.element.style.display = '';
+          }
+        }
         pane.destroy();
         panes.delete(msg.terminalId);
         paneOrder = paneOrder.filter((id) => id !== msg.terminalId);
@@ -193,9 +254,19 @@ window.addEventListener('message', (event: MessageEvent<HostToWebviewMessage>) =
       openVscodeTerminalForFocused();
       break;
     }
+    case 'openActiveInExplorer': {
+      openExplorerForFocused();
+      break;
+    }
     case 'deleteWordBack': {
       if (focusedPaneId) {
         postMessage({ type: 'terminalInput', terminalId: focusedPaneId, data: '\x1b\x7f' });
+      }
+      break;
+    }
+    case 'toggleMaximize': {
+      if (focusedPaneId) {
+        toggleMaximize(focusedPaneId);
       }
       break;
     }
@@ -319,6 +390,14 @@ document.addEventListener('keydown', (e: KeyboardEvent) => {
     e.preventDefault();
     e.stopPropagation();
     openVscodeTerminalForFocused();
+    return;
+  }
+
+  // Cmd+F: Finder/エクスプローラーで開く
+  if (e.metaKey && e.key === 'f' && !e.shiftKey) {
+    e.preventDefault();
+    e.stopPropagation();
+    openExplorerForFocused();
     return;
   }
 

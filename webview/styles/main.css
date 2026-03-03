@@ -146,6 +146,11 @@ body {
   outline-offset: -2px;
 }
 
+/* 最大化状態のペイン */
+.terminal-pane--maximized {
+  outline: none;
+}
+
 .terminal-pane__header {
   display: flex;
   align-items: center;

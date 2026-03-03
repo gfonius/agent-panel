@@ -2,6 +2,7 @@ import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { WebglAddon } from '@xterm/addon-webgl';
 import type { WebviewToHostMessage } from '../src/protocol/messages';
+import { createFilePathLinkProvider, createUrlLinkProvider } from './linkProvider';
 
 export class TerminalPane {
   readonly id: string;
@@ -11,6 +12,7 @@ export class TerminalPane {
   readonly element: HTMLElement;
   private postMessage: (msg: WebviewToHostMessage) => void;
   private focused: boolean = false;
+  private onMaximizeToggle?: (id: string) => void;
 
   constructor(
     id: string,
@@ -18,11 +20,13 @@ export class TerminalPane {
     container: HTMLElement,
     postMessage: (msg: WebviewToHostMessage) => void,
     onFocus?: (id: string) => void,
-    keyHandler?: (e: KeyboardEvent) => boolean
+    keyHandler?: (e: KeyboardEvent) => boolean,
+    onMaximizeToggle?: (id: string) => void
   ) {
     this.id = id;
     this.directory = directory;
     this.postMessage = postMessage;
+    this.onMaximizeToggle = onMaximizeToggle;
 
     this.element = document.createElement('div');
     this.element.className = 'terminal-pane';
@@ -57,6 +61,13 @@ export class TerminalPane {
 
     header.addEventListener('dragend', () => {
       this.element.classList.remove('terminal-pane--dragging');
+    });
+
+    // ダブルクリックで最大化/復元
+    header.addEventListener('dblclick', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.onMaximizeToggle?.(this.id);
     });
 
     header.appendChild(title);
@@ -95,6 +106,14 @@ export class TerminalPane {
     } catch {
       // canvas renderer にフォールバック
     }
+
+    // ファイルパス・URLのリンクプロバイダー登録（Cmd/Ctrl+Click で開く）
+    this.terminal.registerLinkProvider(
+      createFilePathLinkProvider(this.terminal, this.directory, postMessage)
+    );
+    this.terminal.registerLinkProvider(
+      createUrlLinkProvider(this.terminal, postMessage)
+    );
 
     // カスタムキーイベントハンドラを登録
     if (keyHandler) {
