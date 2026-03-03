@@ -164,6 +164,33 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.env.openExternal(vscode.Uri.parse(msg.url));
         break;
       }
+      case 'requestQuit': {
+        // ターミナルなし → パネルだけ閉じる
+        if (!terminalManager || terminalManager.count === 0) {
+          panelManager.getPanel()?.dispose();
+          break;
+        }
+        // オーバーレイ表示指示
+        panelManager.postMessage({ type: 'quitting' });
+        // graceful shutdown
+        await vscode.window.withProgress(
+          { location: vscode.ProgressLocation.Notification, title: 'セッションを保存中...' },
+          async () => {
+            const results = await terminalManager!.gracefulDisposeAll();
+            const sessions = results.map((r) => ({
+              id: crypto.randomUUID(),
+              directory: r.directory,
+              resumeId: r.resumeId,
+              gridPosition: r.gridPosition,
+            }));
+            sessionManager.save(sessions);
+            statusBar.updateBadge(0);
+            terminalManager = undefined;
+            panelManager.getPanel()?.dispose();
+          }
+        );
+        break;
+      }
     }
   }
 
