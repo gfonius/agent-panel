@@ -44,6 +44,8 @@ const rateLimitBar = new RateLimitBar(app, openFolder, quit);
 let focusedPaneId: string | null = null;
 let maximizedPaneId: string | null = null;
 
+const isMac = navigator.userAgent.includes('Macintosh');
+
 function postMessage(msg: WebviewToHostMessage): void {
   vscode.postMessage(msg);
 }
@@ -176,6 +178,7 @@ const keyboardHandler = new KeyboardHandler({
   closeFocused: closeFocusedPane,
   openVscodeTerminal: openVscodeTerminalForFocused,
   openExplorer: openExplorerForFocused,
+  isMac,
 });
 
 const keyHandler = keyboardHandler.getKeyHandler();
@@ -293,6 +296,12 @@ window.addEventListener('message', (event: MessageEvent<HostToWebviewMessage>) =
 
 // documentレベルでショートカットキーをキャプチャ（フォールバック）
 // VSCodeのkeybindingシステムが主だが、webviewに直接届く場合のバックアップ
+
+/** プラットフォームの主修飾キーが押されているか確認する */
+function mod(e: KeyboardEvent): boolean {
+  return isMac ? e.metaKey : e.ctrlKey;
+}
+
 document.addEventListener('keydown', (e: KeyboardEvent) => {
   // Shift+Enter: Claude CLIで改行（LF送信）
   if (e.key === 'Enter' && e.shiftKey && !e.metaKey && !e.ctrlKey) {
@@ -304,8 +313,8 @@ document.addEventListener('keydown', (e: KeyboardEvent) => {
     return;
   }
 
-  // Cmd+Backspace: 単語削除
-  if (e.metaKey && !e.shiftKey && !e.ctrlKey && e.key === 'Backspace') {
+  // Mod+Backspace: 単語削除
+  if (mod(e) && !e.shiftKey && e.key === 'Backspace') {
     e.preventDefault();
     e.stopPropagation();
     if (focusedPaneId) {
@@ -314,8 +323,8 @@ document.addEventListener('keydown', (e: KeyboardEvent) => {
     return;
   }
 
-  // Cmd+Arrow（Shiftなし）: カーソル移動（行頭/行末）
-  if (e.metaKey && !e.shiftKey && !e.ctrlKey) {
+  // Mod+Arrow（Shiftなし）: カーソル移動（行頭/行末）
+  if (mod(e) && !e.shiftKey) {
     if (e.key === 'ArrowLeft') {
       e.preventDefault();
       e.stopPropagation();
@@ -334,8 +343,8 @@ document.addEventListener('keydown', (e: KeyboardEvent) => {
     }
   }
 
-  // Ctrl+Up/Down: エスケープシーケンス
-  if (e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
+  // Ctrl+Up/Down: エスケープシーケンス (macOS only - Windowsではctrlは別用途)
+  if (isMac && e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
     if (e.key === 'ArrowUp') {
       e.preventDefault();
       e.stopPropagation();
@@ -354,7 +363,7 @@ document.addEventListener('keydown', (e: KeyboardEvent) => {
     }
   }
 
-  // Option+Arrow: 単語単位カーソル移動
+  // Option/Alt+Arrow: 単語単位カーソル移動
   if (e.altKey && !e.metaKey && !e.ctrlKey && !e.shiftKey) {
     if (e.key === 'ArrowLeft') {
       e.preventDefault();
@@ -374,8 +383,8 @@ document.addEventListener('keydown', (e: KeyboardEvent) => {
     }
   }
 
-  // Cmd+Shift+Arrow: ペイン間移動（macOSカスタムショートカット）
-  if (e.metaKey && e.shiftKey) {
+  // Mod+Shift+Arrow: ペイン間移動
+  if (mod(e) && e.shiftKey) {
     const dirMap: Record<string, 'up' | 'down' | 'left' | 'right'> = {
       ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right',
     };
@@ -388,32 +397,32 @@ document.addEventListener('keydown', (e: KeyboardEvent) => {
     }
   }
 
-  // Cmd+W: フォーカス中のペインを閉じる（Ctrl+Wは上でターミナルに送信済み）
-  if (e.metaKey && e.key === 'w' && !e.shiftKey) {
+  // Mod+W: フォーカス中のペインを閉じる
+  if (mod(e) && e.key === 'w' && !e.shiftKey) {
     e.preventDefault();
     e.stopPropagation();
     closeFocusedPane();
     return;
   }
 
-  // Cmd+T: VSCodeターミナルで開く（Ctrl+Tは上でターミナルに送信済み）
-  if (e.metaKey && e.key === 't' && !e.shiftKey) {
+  // Mod+T: VSCodeターミナルで開く
+  if (mod(e) && e.key === 't' && !e.shiftKey) {
     e.preventDefault();
     e.stopPropagation();
     openVscodeTerminalForFocused();
     return;
   }
 
-  // Cmd+F: Finder/エクスプローラーで開く
-  if (e.metaKey && e.key === 'f' && !e.shiftKey) {
+  // Mod+F: Finder/エクスプローラーで開く
+  if (mod(e) && e.key === 'f' && !e.shiftKey) {
     e.preventDefault();
     e.stopPropagation();
     openExplorerForFocused();
     return;
   }
 
-  // Cmd+N: 新規ターミナル（Ctrl+Nは上でターミナルに送信済み）
-  if (e.metaKey && e.key === 'n' && !e.shiftKey) {
+  // Mod+N: 新規ターミナル
+  if (mod(e) && e.key === 'n' && !e.shiftKey) {
     e.preventDefault();
     e.stopPropagation();
     postMessage({ type: 'requestFolderPicker' });
