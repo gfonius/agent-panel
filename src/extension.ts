@@ -18,11 +18,14 @@ import { PanelManager } from './managers/PanelManager';
 import { TerminalManager } from './managers/TerminalManager';
 import { SessionManager } from './managers/SessionManager';
 import { fetchRateLimitInfo } from './utils/rateLimitClient';
+import { RecentDirectoriesManager } from './managers/RecentDirectoriesManager';
+import { showDirectoryPicker } from './utils/directoryPicker';
 import type { WebviewToHostMessage } from './protocol/messages';
 
 export function activate(context: vscode.ExtensionContext) {
   const statusBar = new StatusBarManager();
   const sessionManager = new SessionManager(context);
+  const recentDirs = new RecentDirectoriesManager(context);
 
   let terminalManager: TerminalManager | undefined;
   let rateLimitInterval: NodeJS.Timeout | undefined;
@@ -58,6 +61,7 @@ export function activate(context: vscode.ExtensionContext) {
     try {
       const tm = setupTerminalManager();
       const terminalId = tm.create(directory);
+      recentDirs.add(directory);
       panelManager.postMessage({
         type: 'terminalCreated',
         terminalId,
@@ -114,21 +118,14 @@ export function activate(context: vscode.ExtensionContext) {
         terminalManager?.close(msg.terminalId);
         statusBar.updateBadge(terminalManager?.count ?? 0);
         break;
-      case 'requestFolderPicker':
-        vscode.window
-          .showOpenDialog({
-            canSelectFolders: true,
-            canSelectFiles: false,
-            canSelectMany: false,
-            openLabel: 'Open in Agent Panel',
-          })
-          .then((uris) => {
-            if (uris && uris.length > 0) {
-              panelManager.reveal();
-              createTerminal(uris[0].fsPath);
-            }
-          });
+      case 'requestFolderPicker': {
+        const dir = await showDirectoryPicker(recentDirs.getAll());
+        if (dir) {
+          panelManager.reveal();
+          createTerminal(dir);
+        }
         break;
+      }
       case 'openVscodeTerminal': {
         const terminal = vscode.window.createTerminal({
           cwd: msg.directory,
@@ -232,6 +229,7 @@ export function activate(context: vscode.ExtensionContext) {
         const tm = setupTerminalManager();
         for (const session of sessions) {
           const terminalId = tm.create(session.directory, session.resumeId);
+          recentDirs.add(session.directory);
           panelManager.postMessage({
             type: 'terminalCreated',
             terminalId,
@@ -248,20 +246,12 @@ export function activate(context: vscode.ExtensionContext) {
 
   const newTerminalCommand = vscode.commands.registerCommand(
     COMMAND_NEW_TERMINAL,
-    () => {
-      vscode.window
-        .showOpenDialog({
-          canSelectFolders: true,
-          canSelectFiles: false,
-          canSelectMany: false,
-          openLabel: 'Open in Agent Panel',
-        })
-        .then((uris) => {
-          if (uris && uris.length > 0) {
-            panelManager.reveal();
-            createTerminal(uris[0].fsPath);
-          }
-        });
+    async () => {
+      const dir = await showDirectoryPicker(recentDirs.getAll());
+      if (dir) {
+        panelManager.reveal();
+        createTerminal(dir);
+      }
     }
   );
 
@@ -293,6 +283,14 @@ export function activate(context: vscode.ExtensionContext) {
   const toggleMaximizeCmd = vscode.commands.registerCommand(COMMAND_TOGGLE_MAXIMIZE, () => {
     panelManager.postMessage({ type: 'toggleMaximize' });
   });
+  // 初回起動時：履歴が空ならセッションデータからシード
+  if (recentDirs.getAll().length === 0) {
+    const sessions = sessionManager.load();
+    for (const session of sessions) {
+      recentDirs.add(session.directory);
+    }
+  }
+
   context.subscriptions.push(
     openCommand, newTerminalCommand,
     focusUpCmd, focusDownCmd, focusLeftCmd, focusRightCmd,
