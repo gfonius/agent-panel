@@ -44,6 +44,26 @@ describe('getShellArgs', () => {
   });
 });
 
+describe('isMac', () => {
+  it('returns true on darwin', async () => {
+    vi.mocked(os.platform).mockReturnValue('darwin');
+    const { isMac } = await import('../../../src/utils/platform');
+    expect(isMac()).toBe(true);
+  });
+
+  it('returns false on win32', async () => {
+    vi.mocked(os.platform).mockReturnValue('win32');
+    const { isMac } = await import('../../../src/utils/platform');
+    expect(isMac()).toBe(false);
+  });
+
+  it('returns false on linux', async () => {
+    vi.mocked(os.platform).mockReturnValue('linux');
+    const { isMac } = await import('../../../src/utils/platform');
+    expect(isMac()).toBe(false);
+  });
+});
+
 describe('getDefaultShell', () => {
   const originalShellEnv = process.env.SHELL;
 
