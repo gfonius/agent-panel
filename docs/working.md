@@ -1,31 +1,25 @@
-# feature/recent-directories-picker
+# feature/windows-support
 
 ## 概要
-- 新しいパネルを開く時（Cmd+N / "Open Folder"ボタン）にFinderの代わりに最近開いたディレクトリのQuickPick一覧を表示
-- 末尾に「Browse...」でFinderにフォールバック
-- 初回（履歴なし）はFinderが直接開く
-
-## 影響範囲
-- `src/constants.ts` — 定数追加
-- `src/managers/RecentDirectoriesManager.ts` — 新規
-- `src/utils/directoryPicker.ts` — 新規
-- `src/extension.ts` — showOpenDialogをQuickPickに差し替え
-- `tests/unit/managers/RecentDirectoriesManager.test.ts` — 新規
+- Windows/Linux対応: ショートカットキー、資格情報取得、UI表示のクロスプラットフォーム対応
+- v0.0.5ベータ公開に向けた準備
 
 ## 進捗
-- [x] constants.ts に定数追加
-- [x] RecentDirectoriesManager テスト作成（TDD）
-- [x] RecentDirectoriesManager 実装
-- [x] directoryPicker ユーティリティ作成
-- [x] extension.ts 差し替え
-- [x] テスト実行・ビルド確認（141テスト全パス、ビルドOK）
-
-## 課題
-- なし（現時点）
+- [x] platform.ts: isMac()ヘルパー追加
+- [x] rateLimitClient.ts: クロスプラットフォーム対応（環境変数 → Keychain → .credentials.json）
+- [x] KeyboardHandler.ts: mod()抽象化でmetaKey/ctrlKey対応
+- [x] index.ts: documentキーハンドラのクロスプラットフォーム対応
+- [x] ShortcutGuide.ts: プラットフォーム別表示（⌘ vs Ctrl+）
+- [x] i18n.ts: base.subtitleのプラットフォーム別表示
+- [x] テスト作成・実行（156テスト全パス、ビルドOK）
 
 ## 変更ファイル
-- src/constants.ts
-- src/managers/RecentDirectoriesManager.ts
-- src/utils/directoryPicker.ts
-- src/extension.ts
-- tests/unit/managers/RecentDirectoriesManager.test.ts
+- src/utils/platform.ts — isMac()追加
+- src/utils/rateLimitClient.ts — 3段階フォールバック（env → keychain → file）
+- webview/KeyboardHandler.ts — isMacフラグ + mod()メソッド
+- webview/index.ts — isMac検出 + mod()関数 + Ctrl+Up/Down macOSガード
+- webview/ShortcutGuide.ts — プラットフォーム別記号
+- webview/i18n.ts — modKey動的生成
+- tests/unit/utils/platform.test.ts — isMac()テスト追加
+- tests/unit/utils/rateLimitClient.test.ts — クロスプラットフォームテスト追加
+- tests/unit/webview/KeyboardHandler.test.ts — Windows/Linuxテスト追加
