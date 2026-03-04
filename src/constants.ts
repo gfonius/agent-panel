@@ -15,3 +15,5 @@ export const COMMAND_TOGGLE_MAXIMIZE = 'agentPanel.toggleMaximize';
 export const EXTENSION_ID = 'agent-panel';
 export const SESSION_STORAGE_KEY = 'agentPanel.sessions';
 export const RATE_LIMIT_CACHE_TTL = 60_000; // 60秒
+export const RECENT_DIRECTORIES_KEY = 'agentPanel.recentDirectories';
+export const RECENT_DIRECTORIES_MAX = 20;

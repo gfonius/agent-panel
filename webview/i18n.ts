@@ -1,8 +1,11 @@
 type Locale = 'ja' | 'en';
 
+const isMac = typeof navigator !== 'undefined' && navigator.userAgent.includes('Macintosh');
+const modKey = isMac ? 'Cmd' : 'Ctrl';
+
 const translations: Record<Locale, Record<string, string>> = {
   en: {
-    'base.subtitle': 'Click or press <kbd>Cmd+N</kbd> to select a folder',
+    'base.subtitle': `Click or press <kbd>${modKey}+N</kbd> to select a folder`,
     'base.button': 'Open Folder',
     'rate.error': 'Rate info unavailable',
     'rate.reset': 'Reset',
@@ -20,7 +23,7 @@ const translations: Record<Locale, Record<string, string>> = {
     'quit.overlay': 'Saving sessions...',
   },
   ja: {
-    'base.subtitle': 'クリックまたは <kbd>Cmd+N</kbd> でフォルダーを選択',
+    'base.subtitle': `クリックまたは <kbd>${modKey}+N</kbd> でフォルダーを選択`,
     'base.button': 'フォルダーを開く',
     'rate.error': 'レート情報取得不可',
     'rate.reset': 'リセット済み',
