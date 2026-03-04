@@ -1,10 +1,20 @@
 import { RateLimitInfo } from '../types';
 import { RATE_LIMIT_CACHE_TTL } from '../constants';
 import { execSync } from 'child_process';
+import * as os from 'os';
+import * as path from 'path';
+import * as fs from 'fs';
 
 let cache: RateLimitInfo | null = null;
 
-function getOAuthToken(): string | null {
+function getOAuthTokenFromEnv(): string | null {
+  return process.env.CLAUDE_CODE_OAUTH_TOKEN ?? null;
+}
+
+function getOAuthTokenFromKeychain(): string | null {
+  if (os.platform() !== 'darwin') {
+    return null;
+  }
   try {
     const result = execSync(
       'security find-generic-password -s "Claude Code-credentials" -a "$(whoami)" -w',
@@ -16,6 +26,24 @@ function getOAuthToken(): string | null {
   } catch {
     return null;
   }
+}
+
+function getOAuthTokenFromFile(): string | null {
+  try {
+    const configDir = process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude');
+    const credentialsPath = path.join(configDir, '.credentials.json');
+    const content = fs.readFileSync(credentialsPath, 'utf-8');
+    const credentials = JSON.parse(content);
+    return credentials?.claudeAiOauth?.accessToken ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function getOAuthToken(): string | null {
+  return getOAuthTokenFromEnv()
+    ?? getOAuthTokenFromKeychain()
+    ?? getOAuthTokenFromFile();
 }
 
 export async function fetchRateLimitInfo(): Promise<RateLimitInfo | null> {

@@ -8,6 +8,10 @@ export function getDefaultShell(): string {
   return 'powershell.exe';
 }
 
+export function isMac(): boolean {
+  return os.platform() === 'darwin';
+}
+
 export function getShellArgs(shell: string): string[] {
   // ログインシェルにするため -l を渡す
   if (shell.endsWith('zsh') || shell.endsWith('bash')) {

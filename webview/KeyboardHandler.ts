@@ -4,6 +4,7 @@ export class KeyboardHandler {
   private closeFocused: () => void;
   private openVscodeTerminal: () => void;
   private openExplorer: () => void;
+  private isMac: boolean;
 
   constructor(options: {
     postMessage: (msg: unknown) => void;
@@ -11,29 +12,36 @@ export class KeyboardHandler {
     closeFocused: () => void;
     openVscodeTerminal: () => void;
     openExplorer: () => void;
+    isMac: boolean;
   }) {
     this.postMessage = options.postMessage;
     this.focusDirection = options.focusDirection;
     this.closeFocused = options.closeFocused;
     this.openVscodeTerminal = options.openVscodeTerminal;
     this.openExplorer = options.openExplorer;
+    this.isMac = options.isMac;
+  }
+
+  /** Check if the platform's primary modifier key is pressed */
+  private mod(e: KeyboardEvent): boolean {
+    return this.isMac ? e.metaKey : e.ctrlKey;
   }
 
   // xterm.js の attachCustomKeyEventHandler に渡す関数を返す
   getKeyHandler(): (e: KeyboardEvent) => boolean {
     return (e: KeyboardEvent): boolean => {
-      // Shift+Enter, Cmd+Arrow, Option+Arrow はdocument captureリスナーで処理
+      // Shift+Enter, Mod+Arrow, Alt/Option+Arrow はdocument captureリスナーで処理
       // xterm.jsのデフォルト処理を防ぐためfalseを返す
       if (e.type === 'keydown') {
         if (e.key === 'Enter' && e.shiftKey && !e.metaKey && !e.ctrlKey) return false;
-        if (e.metaKey && !e.shiftKey && !e.ctrlKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) return false;
-        if (e.metaKey && !e.shiftKey && !e.ctrlKey && e.key === 'Backspace') return false;
+        if (this.mod(e) && !e.shiftKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) return false;
+        if (this.mod(e) && !e.shiftKey && e.key === 'Backspace') return false;
         if (e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) return false;
         if (e.altKey && !e.metaKey && !e.ctrlKey && !e.shiftKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) return false;
       }
 
-      // Cmd+Shift+Arrow: ペイン間移動（macOSカスタムショートカット）
-      if (e.metaKey && e.shiftKey && e.type === 'keydown') {
+      // Mod+Shift+Arrow: ペイン間移動
+      if (this.mod(e) && e.shiftKey && e.type === 'keydown') {
         switch (e.key) {
           case 'ArrowUp':
             this.focusDirection('up');
@@ -50,26 +58,26 @@ export class KeyboardHandler {
         }
       }
 
-      // Cmd+W: フォーカス中のペインを閉じる（macOSカスタムショートカット）
-      if (e.metaKey && e.key === 'w' && !e.shiftKey && e.type === 'keydown') {
+      // Mod+W: フォーカス中のペインを閉じる
+      if (this.mod(e) && e.key === 'w' && !e.shiftKey && e.type === 'keydown') {
         this.closeFocused();
         return false;
       }
 
-      // Cmd+T: VSCodeターミナルで開く
-      if (e.metaKey && e.key === 't' && !e.shiftKey && e.type === 'keydown') {
+      // Mod+T: VSCodeターミナルで開く
+      if (this.mod(e) && e.key === 't' && !e.shiftKey && e.type === 'keydown') {
         this.openVscodeTerminal();
         return false;
       }
 
-      // Cmd+F: Finder/エクスプローラーで開く
-      if (e.metaKey && e.key === 'f' && !e.shiftKey && e.type === 'keydown') {
+      // Mod+F: Finder/エクスプローラーで開く
+      if (this.mod(e) && e.key === 'f' && !e.shiftKey && e.type === 'keydown') {
         this.openExplorer();
         return false;
       }
 
-      // Cmd+N: 新規ターミナル（フォルダーピッカー）
-      if (e.metaKey && e.key === 'n' && !e.shiftKey && e.type === 'keydown') {
+      // Mod+N: 新規ターミナル（フォルダーピッカー）
+      if (this.mod(e) && e.key === 'n' && !e.shiftKey && e.type === 'keydown') {
         this.postMessage({ type: 'requestFolderPicker' });
         return false;
       }
