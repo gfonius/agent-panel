@@ -1,27 +1,31 @@
-# feature/quit-and-resume
+# feature/recent-directories-picker
 
 ## 概要
-- RateLimitBarの「+」ボタン右に「終了」ボタンを追加
-- 押すと全ターミナルに /exit を送信し、resume IDを取得・保存
-- 次回起動時にそのIDからセッション復元（既存インフラ活用）
+- 新しいパネルを開く時（Cmd+N / "Open Folder"ボタン）にFinderの代わりに最近開いたディレクトリのQuickPick一覧を表示
+- 末尾に「Browse...」でFinderにフォールバック
+- 初回（履歴なし）はFinderが直接開く
+
+## 影響範囲
+- `src/constants.ts` — 定数追加
+- `src/managers/RecentDirectoriesManager.ts` — 新規
+- `src/utils/directoryPicker.ts` — 新規
+- `src/extension.ts` — showOpenDialogをQuickPickに差し替え
+- `tests/unit/managers/RecentDirectoriesManager.test.ts` — 新規
 
 ## 進捗
-- [x] ブランチ作成・コード読み込み
-- [x] protocol/messages.ts — requestQuit, quitting メッセージ型追加
-- [x] i18n.ts — rate.quitTitle, quit.overlay キー追加
-- [x] RateLimitBar.ts — 終了ボタン追加
-- [x] main.css — .rate-limit-bar__quit, .quit-overlay スタイル
-- [x] webview/index.ts — quit関数、quittingメッセージ処理
-- [x] extension.ts — requestQuit ハンドラ
-- [x] TerminalManager.ts — gracefulDisposeAll並列化、exit通知抑制
-- [x] ビルド確認 — エラーなし
-- [x] テスト実行 — 133テスト全パス
+- [x] constants.ts に定数追加
+- [x] RecentDirectoriesManager テスト作成（TDD）
+- [x] RecentDirectoriesManager 実装
+- [x] directoryPicker ユーティリティ作成
+- [x] extension.ts 差し替え
+- [x] テスト実行・ビルド確認（141テスト全パス、ビルドOK）
+
+## 課題
+- なし（現時点）
 
 ## 変更ファイル
-- src/protocol/messages.ts — requestQuit, quitting メッセージ型追加
-- webview/i18n.ts — rate.quitTitle, quit.overlay 翻訳キー追加
-- webview/RateLimitBar.ts — ⏻終了ボタンHTML/クリック/locale対応
-- webview/styles/main.css — .rate-limit-bar__quit, .quit-overlay スタイル
-- webview/index.ts — quit()関数、quittingオーバーレイ表示
-- src/extension.ts — requestQuitハンドラ (gracefulDisposeAll → save → dispose)
-- src/managers/TerminalManager.ts — suppressExitNotifications, gracefulDisposeAll並列化
+- src/constants.ts
+- src/managers/RecentDirectoriesManager.ts
+- src/utils/directoryPicker.ts
+- src/extension.ts
+- tests/unit/managers/RecentDirectoriesManager.test.ts
