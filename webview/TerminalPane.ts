@@ -13,6 +13,10 @@ export class TerminalPane {
   private postMessage: (msg: WebviewToHostMessage) => void;
   private focused: boolean = false;
   private onMaximizeToggle?: (id: string) => void;
+  private badgeElement: HTMLElement;
+  private titleElement: HTMLElement;
+  private customName?: string;
+  private isRenaming = false;
 
   constructor(
     id: string,
@@ -21,12 +25,14 @@ export class TerminalPane {
     postMessage: (msg: WebviewToHostMessage) => void,
     onFocus?: (id: string) => void,
     keyHandler?: (e: KeyboardEvent) => boolean,
-    onMaximizeToggle?: (id: string) => void
+    onMaximizeToggle?: (id: string) => void,
+    customName?: string
   ) {
     this.id = id;
     this.directory = directory;
     this.postMessage = postMessage;
     this.onMaximizeToggle = onMaximizeToggle;
+    this.customName = customName;
 
     this.element = document.createElement('div');
     this.element.className = 'terminal-pane';
@@ -36,10 +42,16 @@ export class TerminalPane {
     const header = document.createElement('div');
     header.className = 'terminal-pane__header';
 
-    const title = document.createElement('span');
-    title.className = 'terminal-pane__title';
-    title.textContent = directory.split('/').pop() || directory;
-    title.title = directory;
+    this.badgeElement = document.createElement('span');
+    this.badgeElement.className = 'terminal-pane__badge';
+    this.badgeElement.textContent = '';
+
+    this.titleElement = document.createElement('span');
+    this.titleElement.className = 'terminal-pane__title';
+    this.titleElement.textContent = customName || directory.split('/').pop() || directory;
+    this.titleElement.title = customName
+      ? `${directory} (${customName})`
+      : directory;
 
     const closeBtn = document.createElement('button');
     closeBtn.className = 'terminal-pane__close';
@@ -63,14 +75,23 @@ export class TerminalPane {
       this.element.classList.remove('terminal-pane--dragging');
     });
 
-    // ダブルクリックで最大化/復元
+    // ヘッダー自体（バッジ・タイトル以外）のダブルクリックで最大化/復元
     header.addEventListener('dblclick', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      this.onMaximizeToggle?.(this.id);
+      if (e.target === header || e.target === this.badgeElement) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.onMaximizeToggle?.(this.id);
+      }
     });
 
-    header.appendChild(title);
+    // タイトルのダブルクリックでリネーム
+    this.titleElement.addEventListener('dblclick', (e) => {
+      e.stopPropagation();
+      this.startRename();
+    });
+
+    header.appendChild(this.badgeElement);
+    header.appendChild(this.titleElement);
     header.appendChild(closeBtn);
     this.element.appendChild(header);
 
@@ -187,6 +208,64 @@ export class TerminalPane {
   destroy(): void {
     this.terminal.dispose();
     this.element.remove();
+  }
+
+  updatePaneNumber(num: number): void {
+    this.badgeElement.textContent = String(num);
+  }
+
+  getCustomName(): string | undefined {
+    return this.customName;
+  }
+
+  private startRename(): void {
+    if (this.isRenaming) return;
+    this.isRenaming = true;
+    const header = this.titleElement.parentElement!;
+    header.draggable = false;
+
+    const input = document.createElement('input');
+    input.className = 'terminal-pane__rename-input';
+    input.value = this.customName || this.titleElement.textContent || '';
+    input.select();
+
+    this.titleElement.style.display = 'none';
+    this.titleElement.insertAdjacentElement('afterend', input);
+    input.focus();
+
+    const commit = () => {
+      if (!this.isRenaming) return;
+      this.isRenaming = false;
+      const newName = input.value.trim();
+      if (newName) {
+        this.customName = newName;
+        this.titleElement.textContent = newName;
+        this.titleElement.title = `${this.directory} (${newName})`;
+      } else {
+        this.customName = undefined;
+        this.titleElement.textContent = this.directory.split('/').pop() || this.directory;
+        this.titleElement.title = this.directory;
+      }
+      input.remove();
+      this.titleElement.style.display = '';
+      header.draggable = true;
+      this.postMessage({ type: 'paneRenamed', terminalId: this.id, customName: this.customName || '' });
+    };
+
+    const cancel = () => {
+      if (!this.isRenaming) return;
+      this.isRenaming = false;
+      input.remove();
+      this.titleElement.style.display = '';
+      header.draggable = true;
+    };
+
+    input.addEventListener('keydown', (ev) => {
+      ev.stopPropagation();
+      if (ev.key === 'Enter') { ev.preventDefault(); commit(); }
+      if (ev.key === 'Escape') { ev.preventDefault(); cancel(); }
+    });
+    input.addEventListener('blur', commit);
   }
 }
 

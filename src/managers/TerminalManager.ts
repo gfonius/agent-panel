@@ -137,11 +137,11 @@ export class TerminalManager {
   /**
    * 全ターミナルをgracefulに閉じてセッション情報を返す
    */
-  async gracefulDisposeAll(): Promise<Array<{ directory: string; resumeId?: string; gridPosition: number }>> {
+  async gracefulDisposeAll(): Promise<Array<{ directory: string; resumeId?: string; gridPosition: number; terminalId: string }>> {
     this.suppressExitNotifications = true;
     const entries = Array.from(this.terminals.entries());
     const promises = entries.map(([id], i) =>
-      this.gracefulClose(id).then((result) => ({ ...result, gridPosition: i }))
+      this.gracefulClose(id).then((result) => ({ ...result, gridPosition: i, terminalId: id }))
     );
     const results = await Promise.all(promises);
     this.suppressExitNotifications = false;

@@ -3,6 +3,7 @@ export interface TerminalSession {
   directory: string;
   resumeId?: string;
   gridPosition: number;
+  customName?: string;
 }
 
 export interface SavedState {

@@ -156,6 +156,28 @@ describe('KeyboardHandler', () => {
         expect(focusDirection).not.toHaveBeenCalled();
       });
     });
+
+    describe('Cmd+1-9 (pane jump)', () => {
+      it('Cmd+1 → returns false', () => {
+        const e = makeEvent({ metaKey: true, key: '1' });
+        expect(handler(e)).toBe(false);
+      });
+
+      it('Cmd+9 → returns false', () => {
+        const e = makeEvent({ metaKey: true, key: '9' });
+        expect(handler(e)).toBe(false);
+      });
+
+      it('Cmd+0 → returns true (not handled)', () => {
+        const e = makeEvent({ metaKey: true, key: '0' });
+        expect(handler(e)).toBe(true);
+      });
+
+      it('Cmd+Shift+1 → returns true (different modifiers)', () => {
+        const e = makeEvent({ metaKey: true, shiftKey: true, key: '1' });
+        expect(handler(e)).toBe(true);
+      });
+    });
   });
 
   describe('Windows/Linux (isMac: false)', () => {
@@ -241,6 +263,23 @@ describe('KeyboardHandler', () => {
         const e = makeEvent({ metaKey: true, key: 'w' });
         expect(handler(e)).toBe(true);
         expect(closeFocused).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('Ctrl+1-9 (pane jump)', () => {
+      it('Ctrl+1 → returns false', () => {
+        const e = makeEvent({ ctrlKey: true, key: '1' });
+        expect(handler(e)).toBe(false);
+      });
+
+      it('Ctrl+9 → returns false', () => {
+        const e = makeEvent({ ctrlKey: true, key: '9' });
+        expect(handler(e)).toBe(false);
+      });
+
+      it('Ctrl+0 → returns true (not handled)', () => {
+        const e = makeEvent({ ctrlKey: true, key: '0' });
+        expect(handler(e)).toBe(true);
       });
     });
   });

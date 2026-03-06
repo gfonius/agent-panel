@@ -12,6 +12,7 @@ import {
   COMMAND_OPEN_EXPLORER,
   COMMAND_DELETE_WORD_BACK,
   COMMAND_TOGGLE_MAXIMIZE,
+  RATE_LIMIT_CACHE_TTL,
 } from './constants';
 import { StatusBarManager } from './managers/StatusBarManager';
 import { PanelManager } from './managers/PanelManager';
@@ -26,6 +27,7 @@ export function activate(context: vscode.ExtensionContext) {
   const statusBar = new StatusBarManager();
   const sessionManager = new SessionManager(context);
   const recentDirs = new RecentDirectoriesManager(context);
+  const customNames = new Map<string, string>();
 
   let terminalManager: TerminalManager | undefined;
   let rateLimitInterval: NodeJS.Timeout | undefined;
@@ -100,6 +102,7 @@ export function activate(context: vscode.ExtensionContext) {
               type: 'terminalCreated',
               terminalId: t.id,
               directory: t.directory,
+              customName: customNames.get(t.id),
             });
           }
           statusBar.updateBadge(terminalManager.count);
@@ -116,8 +119,17 @@ export function activate(context: vscode.ExtensionContext) {
         break;
       case 'closeTerminal':
         terminalManager?.close(msg.terminalId);
+        customNames.delete(msg.terminalId);
         statusBar.updateBadge(terminalManager?.count ?? 0);
         break;
+      case 'paneRenamed': {
+        if (msg.customName) {
+          customNames.set(msg.terminalId, msg.customName);
+        } else {
+          customNames.delete(msg.terminalId);
+        }
+        break;
+      }
       case 'requestFolderPicker': {
         const dir = await showDirectoryPicker(recentDirs.getAll());
         if (dir) {
@@ -179,6 +191,7 @@ export function activate(context: vscode.ExtensionContext) {
               directory: r.directory,
               resumeId: r.resumeId,
               gridPosition: r.gridPosition,
+              customName: customNames.get(r.terminalId),
             }));
             sessionManager.save(sessions);
             statusBar.updateBadge(0);
@@ -213,7 +226,7 @@ export function activate(context: vscode.ExtensionContext) {
     // レート制限ポーリング開始
     if (!rateLimitInterval) {
       updateRateLimit(); // 初回即時取得
-      rateLimitInterval = setInterval(updateRateLimit, 60_000);
+      rateLimitInterval = setInterval(updateRateLimit, RATE_LIMIT_CACHE_TTL);
     }
 
     // 保存セッションがあり、かつ現在ターミナルが起動していない場合のみ復元確認
@@ -234,6 +247,7 @@ export function activate(context: vscode.ExtensionContext) {
             type: 'terminalCreated',
             terminalId,
             directory: session.directory,
+            customName: session.customName,
           });
         }
         statusBar.updateBadge(tm.count);
@@ -283,6 +297,16 @@ export function activate(context: vscode.ExtensionContext) {
   const toggleMaximizeCmd = vscode.commands.registerCommand(COMMAND_TOGGLE_MAXIMIZE, () => {
     panelManager.postMessage({ type: 'toggleMaximize' });
   });
+
+  // ペイン番号ジャンプコマンド（1〜9）
+  const focusPaneCmds: vscode.Disposable[] = [];
+  for (let i = 1; i <= 9; i++) {
+    const cmd = vscode.commands.registerCommand(`agentPanel.focusPane${i}`, () => {
+      panelManager.postMessage({ type: 'focusPaneByIndex', index: i - 1 });
+    });
+    focusPaneCmds.push(cmd);
+  }
+
   // 初回起動時：履歴が空ならセッションデータからシード
   if (recentDirs.getAll().length === 0) {
     const sessions = sessionManager.load();
@@ -295,6 +319,7 @@ export function activate(context: vscode.ExtensionContext) {
     openCommand, newTerminalCommand,
     focusUpCmd, focusDownCmd, focusLeftCmd, focusRightCmd,
     closeTermCmd, openVscTermCmd, openExplorerCmd, deleteWordBackCmd, toggleMaximizeCmd,
+    ...focusPaneCmds,
     {
       dispose: () => {
         if (rateLimitInterval) {

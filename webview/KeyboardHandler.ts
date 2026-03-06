@@ -38,6 +38,11 @@ export class KeyboardHandler {
         if (this.mod(e) && !e.shiftKey && e.key === 'Backspace') return false;
         if (e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) return false;
         if (e.altKey && !e.metaKey && !e.ctrlKey && !e.shiftKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) return false;
+        // Mod+1-9: ペイン番号ジャンプ（xterm.jsブロック）
+        if (this.mod(e) && !e.shiftKey && !e.altKey) {
+          const num = parseInt(e.key, 10);
+          if (num >= 1 && num <= 9) return false;
+        }
       }
 
       // Mod+Shift+Arrow: ペイン間移動
