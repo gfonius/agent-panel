@@ -284,6 +284,14 @@ body {
   min-width: 0;
 }
 
+.rate-limit-bar__font-size {
+  flex-shrink: 0;
+  font-size: 10px;
+  opacity: 0.5;
+  margin-right: auto;
+  padding-left: 8px;
+}
+
 .rate-limit-bar__add {
   flex-shrink: 0;
   width: 24px;

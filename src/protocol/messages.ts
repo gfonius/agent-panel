@@ -18,6 +18,7 @@ export type HostToWebviewMessage =
   | { type: 'toggleMaximize' }
   | { type: 'quitting' }
   | { type: 'focusPaneByIndex'; index: number }
+  | { type: 'setFontSize'; fontSize: number }
 
 // Webview → Host
 export type WebviewToHostMessage =
