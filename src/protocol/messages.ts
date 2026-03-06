@@ -1,6 +1,6 @@
 // Host → Webview
 export type HostToWebviewMessage =
-  | { type: 'terminalCreated'; terminalId: string; directory: string }
+  | { type: 'terminalCreated'; terminalId: string; directory: string; customName?: string }
   | { type: 'terminalOutput'; terminalId: string; data: string }
   | { type: 'terminalClosed'; terminalId: string }
   | {
@@ -17,6 +17,7 @@ export type HostToWebviewMessage =
   | { type: 'setLocale'; locale: string }
   | { type: 'toggleMaximize' }
   | { type: 'quitting' }
+  | { type: 'focusPaneByIndex'; index: number }
 
 // Webview → Host
 export type WebviewToHostMessage =
@@ -32,3 +33,4 @@ export type WebviewToHostMessage =
   | { type: 'openFile'; filePath: string; directory: string; line?: number; column?: number }
   | { type: 'openUrl'; url: string }
   | { type: 'requestQuit' }
+  | { type: 'paneRenamed'; terminalId: string; customName: string }

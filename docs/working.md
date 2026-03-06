@@ -1,5 +1,5 @@
-# v0.0.5 リリース準備
+# v0.0.6 リリース準備
 
 ## 完了済みfeature
-- [x] feature/windows-support — Windows/Linux対応
-- [x] feature/icon-redesign — アイコン刷新
+- [x] feature/pane-number-and-rename — ペイン番号ジャンプ & リネーム
+- [x] レート制限ポーリング間隔を5分に変更

@@ -30,6 +30,7 @@ export class ShortcutGuide {
       `<kbd>${shift}${mod}${arrows}</kbd> ${t('shortcut.nav')}`,
       `<kbd>${mod}${del}</kbd> ${t('shortcut.wordDel')}`,
       `<kbd>⇧Enter</kbd> ${t('shortcut.newline')}`,
+      `<kbd>${mod}1~9</kbd> ${t('shortcut.paneJump')}`,
       `<kbd>DblClick</kbd> ${t('shortcut.maximize')}`,
     ].map(item => `<span class="shortcut-guide__item">${item}</span>`).join('');
   }
