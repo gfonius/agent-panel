@@ -176,6 +176,26 @@ body {
   white-space: nowrap;
 }
 
+.terminal-pane__badge {
+  font-size: 10px;
+  font-weight: 600;
+  min-width: 16px;
+  height: 16px;
+  line-height: 16px;
+  text-align: center;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--panel-fg);
+  opacity: 0.5;
+  flex-shrink: 0;
+  margin-right: 4px;
+}
+
+.terminal-pane--focused .terminal-pane__badge {
+  opacity: 0.8;
+  background: rgba(255, 255, 255, 0.12);
+}
+
 .terminal-pane__close {
   background: none;
   border: none;
@@ -195,6 +215,21 @@ body {
   flex: 1;
   overflow: hidden;
   padding: 4px;
+}
+
+.terminal-pane__rename-input {
+  font-size: 11px;
+  font-family: inherit;
+  background: var(--vscode-input-background, rgba(255, 255, 255, 0.1));
+  color: var(--vscode-input-foreground, var(--panel-fg));
+  border: 1px solid var(--vscode-focusBorder, #007fd4);
+  border-radius: 2px;
+  padding: 0 4px;
+  height: 18px;
+  outline: none;
+  flex: 1;
+  min-width: 40px;
+  max-width: 200px;
 }
 
 /* Shortcut Guide */

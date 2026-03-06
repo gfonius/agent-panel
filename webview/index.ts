@@ -58,6 +58,12 @@ function focusPane(id: string): void {
   focusedPaneId = id;
 }
 
+function updatePaneNumbers(): void {
+  paneOrder.forEach((id, i) => {
+    panes.get(id)?.updatePaneNumber(i + 1);
+  });
+}
+
 function updateView(): void {
   if (panes.size === 0) {
     baseScreen.show();
@@ -195,7 +201,8 @@ window.addEventListener('message', (event: MessageEvent<HostToWebviewMessage>) =
         postMessage,
         (id) => focusPane(id),
         keyHandler,
-        (id) => toggleMaximize(id)
+        (id) => toggleMaximize(id),
+        msg.customName
       );
       panes.set(msg.terminalId, pane);
       paneOrder.push(msg.terminalId);
@@ -203,6 +210,7 @@ window.addEventListener('message', (event: MessageEvent<HostToWebviewMessage>) =
       focusPane(msg.terminalId);
       grid.update(panes.size);
       updateView();
+      updatePaneNumbers();
       break;
     }
     case 'terminalOutput': {
@@ -234,6 +242,7 @@ window.addEventListener('message', (event: MessageEvent<HostToWebviewMessage>) =
         }
         grid.update(panes.size);
         updateView();
+        updatePaneNumbers();
         // 残りのペインをリサイズ
         for (const p of panes.values()) {
           p.fit();
@@ -291,6 +300,16 @@ window.addEventListener('message', (event: MessageEvent<HostToWebviewMessage>) =
       rateLimitBar.updateLocale();
       break;
     }
+    case 'focusPaneByIndex': {
+      const targetId = paneOrder[msg.index];
+      if (targetId) {
+        if (maximizedPaneId && maximizedPaneId !== targetId) {
+          toggleMaximize(maximizedPaneId); // 最大化解除
+        }
+        focusPane(targetId);
+      }
+      break;
+    }
   }
 });
 
@@ -303,6 +322,23 @@ function mod(e: KeyboardEvent): boolean {
 }
 
 document.addEventListener('keydown', (e: KeyboardEvent) => {
+  // Mod+1-9: ペイン番号ジャンプ
+  if (mod(e) && !e.shiftKey && !e.altKey) {
+    const num = parseInt(e.key, 10);
+    if (num >= 1 && num <= 9) {
+      e.preventDefault();
+      e.stopPropagation();
+      const targetId = paneOrder[num - 1];
+      if (targetId) {
+        if (maximizedPaneId && maximizedPaneId !== targetId) {
+          toggleMaximize(maximizedPaneId);
+        }
+        focusPane(targetId);
+      }
+      return;
+    }
+  }
+
   // Shift+Enter: Claude CLIで改行（LF送信）
   if (e.key === 'Enter' && e.shiftKey && !e.metaKey && !e.ctrlKey) {
     e.preventDefault();
@@ -460,6 +496,7 @@ function updateDomOrder(): void {
 function reorderPanes(draggedId: string, targetId: string, insertBefore: boolean): void {
   paneOrder = reorderPaneIds(paneOrder, draggedId, targetId, insertBefore);
   updateDomOrder();
+  updatePaneNumbers();
 }
 
 /** 各ペインの要素に dragover / dragleave / drop リスナーを設定する */
