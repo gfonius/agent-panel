@@ -53,6 +53,14 @@ export function activate(context: vscode.ExtensionContext) {
           terminalId,
         });
         statusBar.updateBadge(terminalManager?.count ?? 0);
+      },
+      // onStatusChange: ステータスインジケーター更新
+      (terminalId, status) => {
+        panelManager.postMessage({
+          type: 'terminalStatusUpdate',
+          terminalId,
+          status,
+        });
       }
     );
 

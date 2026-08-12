@@ -196,6 +196,37 @@ body {
   background: rgba(255, 255, 255, 0.12);
 }
 
+/* Status Indicator Dot */
+.terminal-pane__status {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-right: 4px;
+  display: none;
+}
+
+.terminal-pane__status--thinking {
+  display: block;
+  background: var(--vscode-editorWarning-foreground, #cca700);
+  animation: status-pulse 1.5s ease-in-out infinite;
+}
+
+.terminal-pane__status--waiting {
+  display: block;
+  background: var(--vscode-testing-iconPassed, #73c991);
+}
+
+.terminal-pane__status--error {
+  display: block;
+  background: var(--vscode-editorError-foreground, #f14c4c);
+}
+
+@keyframes status-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
 .terminal-pane__close {
   background: none;
   border: none;

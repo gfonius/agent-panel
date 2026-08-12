@@ -310,6 +310,10 @@ window.addEventListener('message', (event: MessageEvent<HostToWebviewMessage>) =
       }
       break;
     }
+    case 'terminalStatusUpdate': {
+      panes.get(msg.terminalId)?.updateStatus(msg.status);
+      break;
+    }
   }
 });
 

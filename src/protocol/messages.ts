@@ -18,6 +18,7 @@ export type HostToWebviewMessage =
   | { type: 'toggleMaximize' }
   | { type: 'quitting' }
   | { type: 'focusPaneByIndex'; index: number }
+  | { type: 'terminalStatusUpdate'; terminalId: string; status: 'idle' | 'thinking' | 'waiting' | 'error' }
 
 // Webview → Host
 export type WebviewToHostMessage =
