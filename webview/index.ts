@@ -252,9 +252,8 @@ window.addEventListener('message', (event: MessageEvent<HostToWebviewMessage>) =
     }
     case 'rateLimitUpdate': {
       rateLimitBar.update({
-        fiveHour: msg.fiveHour,
-        sevenDay: msg.sevenDay,
-        sevenDaySonnet: msg.sevenDaySonnet,
+        windows: msg.windows,
+        extraUsage: msg.extraUsage,
       });
       break;
     }
