@@ -26,7 +26,8 @@ export class TerminalPane {
     onFocus?: (id: string) => void,
     keyHandler?: (e: KeyboardEvent) => boolean,
     onMaximizeToggle?: (id: string) => void,
-    customName?: string
+    customName?: string,
+    fontSize?: number
   ) {
     this.id = id;
     this.directory = directory;
@@ -104,7 +105,7 @@ export class TerminalPane {
 
     // xterm.js 初期化
     this.terminal = new Terminal({
-      fontSize: 13,
+      fontSize: fontSize ?? 13,
       fontFamily: 'Menlo, Monaco, "Courier New", monospace',
       cursorBlink: true,
       cursorStyle: 'block',
@@ -203,6 +204,17 @@ export class TerminalPane {
 
   fit(): void {
     this.fitAddon.fit();
+  }
+
+  setFontSize(size: number): void {
+    this.terminal.options.fontSize = size;
+    this.fitAddon.fit();
+    this.postMessage({
+      type: 'terminalResize',
+      terminalId: this.id,
+      cols: this.terminal.cols,
+      rows: this.terminal.rows,
+    });
   }
 
   destroy(): void {

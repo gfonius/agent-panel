@@ -44,6 +44,9 @@ const rateLimitBar = new RateLimitBar(app, openFolder, quit);
 let focusedPaneId: string | null = null;
 let maximizedPaneId: string | null = null;
 
+const DEFAULT_FONT_SIZE = 13;
+let currentFontSize = DEFAULT_FONT_SIZE;
+
 const isMac = navigator.userAgent.includes('Macintosh');
 
 function postMessage(msg: WebviewToHostMessage): void {
@@ -202,7 +205,8 @@ window.addEventListener('message', (event: MessageEvent<HostToWebviewMessage>) =
         (id) => focusPane(id),
         keyHandler,
         (id) => toggleMaximize(id),
-        msg.customName
+        msg.customName,
+        currentFontSize
       );
       panes.set(msg.terminalId, pane);
       paneOrder.push(msg.terminalId);
@@ -308,6 +312,14 @@ window.addEventListener('message', (event: MessageEvent<HostToWebviewMessage>) =
         }
         focusPane(targetId);
       }
+      break;
+    }
+    case 'setFontSize': {
+      currentFontSize = msg.fontSize;
+      for (const p of panes.values()) {
+        p.setFontSize(currentFontSize);
+      }
+      rateLimitBar.updateFontSize(currentFontSize);
       break;
     }
   }

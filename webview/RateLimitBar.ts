@@ -13,6 +13,7 @@ export class RateLimitBar {
   private sonnetText: HTMLElement;
   private sonnetReset: HTMLElement;
   private errorMessage: HTMLElement;
+  private fontSizeDisplay: HTMLElement;
   private updateInterval: number | undefined;
 
   constructor(container: HTMLElement, onOpenFolder?: () => void, onQuit?: () => void) {
@@ -47,6 +48,7 @@ export class RateLimitBar {
           </div>
           <div class="rate-limit-bar__error" style="display:none">${t('rate.error')}</div>
         </div>
+        <span class="rate-limit-bar__font-size" title="Font Size">13px</span>
         <button class="rate-limit-bar__add" title="${t('rate.addTitle')}">+</button>
         <button class="rate-limit-bar__quit" title="${t('rate.quitTitle')}">⏻</button>
       </div>
@@ -74,6 +76,7 @@ export class RateLimitBar {
     this.sonnetText = this.element.querySelector('[data-text="sonnet"]')!;
     this.sonnetReset = this.element.querySelector('[data-reset="sonnet"]')!;
     this.errorMessage = this.element.querySelector('.rate-limit-bar__error')!;
+    this.fontSizeDisplay = this.element.querySelector('.rate-limit-bar__font-size')!;
 
     // リセット時刻のカウントダウンを毎秒更新
     this.updateInterval = window.setInterval(() => this.updateCountdowns(), 1000);
@@ -164,6 +167,10 @@ export class RateLimitBar {
     }
 
     el.textContent = `${countdown} (${dateStr})`;
+  }
+
+  updateFontSize(size: number): void {
+    this.fontSizeDisplay.textContent = `${size}px`;
   }
 
   updateLocale(): void {
