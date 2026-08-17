@@ -1,3 +1,5 @@
+import type { ExtraUsage, RateLimitWindow } from '../types';
+
 // Host → Webview
 export type HostToWebviewMessage =
   | { type: 'terminalCreated'; terminalId: string; directory: string; customName?: string }
@@ -5,9 +7,8 @@ export type HostToWebviewMessage =
   | { type: 'terminalClosed'; terminalId: string }
   | {
       type: 'rateLimitUpdate';
-      fiveHour: { utilization: number; resetsAt: string };
-      sevenDay: { utilization: number; resetsAt: string };
-      sevenDaySonnet: { utilization: number; resetsAt: string } | null;
+      windows: RateLimitWindow[];
+      extraUsage: ExtraUsage | null;
     }
   | { type: 'focusDirection'; direction: 'up' | 'down' | 'left' | 'right' }
   | { type: 'closeActiveTerminal' }

@@ -11,18 +11,28 @@ export interface SavedState {
   version: number;
 }
 
+export interface RateLimitWindow {
+  key: string;
+  utilization: number;
+  resetsAt: string | null;
+  limitDollars?: number;
+  usedDollars?: number;
+  remainingDollars?: number;
+}
+
+export interface ExtraUsage {
+  isEnabled: boolean;
+  monthlyLimit: number | null;
+  usedCredits: number;
+  utilization: number;
+  currency: string;
+  decimalPlaces: number;
+  spendLimitReached: boolean;
+  disabledReason: string | null;
+}
+
 export interface RateLimitInfo {
-  fiveHour: {
-    utilization: number;
-    resetsAt: string;
-  };
-  sevenDay: {
-    utilization: number;
-    resetsAt: string;
-  };
-  sevenDaySonnet: {
-    utilization: number;
-    resetsAt: string;
-  } | null;
+  windows: RateLimitWindow[];
+  extraUsage: ExtraUsage | null;
   fetchedAt: number;
 }

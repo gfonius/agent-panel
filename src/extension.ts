@@ -93,9 +93,8 @@ export function activate(context: vscode.ExtensionContext) {
     if (info) {
       panelManager.postMessage({
         type: 'rateLimitUpdate',
-        fiveHour: info.fiveHour,
-        sevenDay: info.sevenDay,
-        sevenDaySonnet: info.sevenDaySonnet,
+        windows: info.windows,
+        extraUsage: info.extraUsage,
       });
     }
   }

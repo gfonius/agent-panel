@@ -404,6 +404,14 @@ body {
   padding: 2px 0;
 }
 
+.rate-limit-bar__row--credit {
+  justify-content: flex-start;
+}
+
+.rate-limit-bar__credit-text {
+  opacity: 0.8;
+}
+
 /* Quit Button */
 .rate-limit-bar__quit {
   flex-shrink: 0;
