@@ -14,6 +14,7 @@ export class TerminalPane {
   private focused: boolean = false;
   private onMaximizeToggle?: (id: string) => void;
   private badgeElement: HTMLElement;
+  private statusElement: HTMLElement;
   private titleElement: HTMLElement;
   private customName?: string;
   private isRenaming = false;
@@ -46,6 +47,9 @@ export class TerminalPane {
     this.badgeElement = document.createElement('span');
     this.badgeElement.className = 'terminal-pane__badge';
     this.badgeElement.textContent = '';
+
+    this.statusElement = document.createElement('span');
+    this.statusElement.className = 'terminal-pane__status';
 
     this.titleElement = document.createElement('span');
     this.titleElement.className = 'terminal-pane__title';
@@ -92,6 +96,7 @@ export class TerminalPane {
     });
 
     header.appendChild(this.badgeElement);
+    header.appendChild(this.statusElement);
     header.appendChild(this.titleElement);
     header.appendChild(closeBtn);
     this.element.appendChild(header);
@@ -224,6 +229,13 @@ export class TerminalPane {
 
   updatePaneNumber(num: number): void {
     this.badgeElement.textContent = String(num);
+  }
+
+  updateStatus(status: 'idle' | 'thinking' | 'waiting' | 'error'): void {
+    this.statusElement.className = 'terminal-pane__status';
+    if (status !== 'idle') {
+      this.statusElement.classList.add(`terminal-pane__status--${status}`);
+    }
   }
 
   getCustomName(): string | undefined {

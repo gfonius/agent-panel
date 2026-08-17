@@ -19,6 +19,7 @@ export type HostToWebviewMessage =
   | { type: 'quitting' }
   | { type: 'focusPaneByIndex'; index: number }
   | { type: 'setFontSize'; fontSize: number }
+  | { type: 'terminalStatusUpdate'; terminalId: string; status: 'idle' | 'thinking' | 'waiting' | 'error' }
 
 // Webview → Host
 export type WebviewToHostMessage =

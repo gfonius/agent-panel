@@ -1,17 +1,25 @@
-# feature/font-size-adjustment
+# feature/status-indicator
 
 ## 概要
-- #7 フォントサイズ調整: Cmd+=/Cmd+-/Cmd+0 でフォントサイズ変更
-- VS Code設定で永続化、レートバーにサイズ表示
+- #8 ステータスインジケーター: 各ターミナルペインのヘッダーにClaude Codeの状態をドットで表示
+- ANSIパターン解析でCLI出力から状態検出（thinking/waiting/error/idle）
 
 ## 進捗
-- [x] 型定義・プロトコル
-- [x] package.json（commands, keybindings, configuration）
-- [x] extension.ts（コマンド登録、設定読み書き）
-- [x] TerminalPane.ts（setFontSize）
-- [x] index.ts（メッセージハンドラ）
-- [x] KeyboardHandler.ts（xterm除外）
-- [x] i18n + ShortcutGuide
-- [x] RateLimitBar（フォントサイズ表示）
-- [x] テスト（167テスト全通過）
-- [x] ビルド確認
+- [x] statusDetector.ts + テスト (TDD) — 24テスト
+- [x] messages.ts (型追加)
+- [x] TerminalManager.ts (統合)
+- [x] extension.ts (配線)
+- [x] TerminalPane.ts (UI)
+- [x] index.ts (ハンドラ)
+- [x] main.css (スタイル)
+- [x] ビルド・テスト確認 — 187テスト全通過、ビルド成功
+
+## 変更ファイル
+- src/utils/statusDetector.ts (新規)
+- tests/unit/utils/statusDetector.test.ts (新規)
+- src/protocol/messages.ts
+- src/managers/TerminalManager.ts
+- src/extension.ts
+- webview/TerminalPane.ts
+- webview/index.ts
+- webview/styles/main.css

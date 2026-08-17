@@ -322,6 +322,10 @@ window.addEventListener('message', (event: MessageEvent<HostToWebviewMessage>) =
       rateLimitBar.updateFontSize(currentFontSize);
       break;
     }
+    case 'terminalStatusUpdate': {
+      panes.get(msg.terminalId)?.updateStatus(msg.status);
+      break;
+    }
   }
 });
 
