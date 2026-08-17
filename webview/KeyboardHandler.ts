@@ -43,6 +43,8 @@ export class KeyboardHandler {
           const num = parseInt(e.key, 10);
           if (num >= 1 && num <= 9) return false;
         }
+        // Mod+=/+/-/0: フォントサイズ変更（xterm.jsブロック）
+        if (this.mod(e) && !e.shiftKey && !e.altKey && (e.key === '=' || e.key === '+' || e.key === '-' || e.key === '0')) return false;
       }
 
       // Mod+Shift+Arrow: ペイン間移動

@@ -64,6 +64,46 @@ describe('isMac', () => {
   });
 });
 
+describe('isWindows', () => {
+  it('returns true on win32', async () => {
+    vi.mocked(os.platform).mockReturnValue('win32');
+    const { isWindows } = await import('../../../src/utils/platform');
+    expect(isWindows()).toBe(true);
+  });
+
+  it('returns false on darwin', async () => {
+    vi.mocked(os.platform).mockReturnValue('darwin');
+    const { isWindows } = await import('../../../src/utils/platform');
+    expect(isWindows()).toBe(false);
+  });
+
+  it('returns false on linux', async () => {
+    vi.mocked(os.platform).mockReturnValue('linux');
+    const { isWindows } = await import('../../../src/utils/platform');
+    expect(isWindows()).toBe(false);
+  });
+});
+
+describe('getCommandLineEnding', () => {
+  it('returns "\\r" on win32', async () => {
+    vi.mocked(os.platform).mockReturnValue('win32');
+    const { getCommandLineEnding } = await import('../../../src/utils/platform');
+    expect(getCommandLineEnding()).toBe('\r');
+  });
+
+  it('returns "\\n" on darwin', async () => {
+    vi.mocked(os.platform).mockReturnValue('darwin');
+    const { getCommandLineEnding } = await import('../../../src/utils/platform');
+    expect(getCommandLineEnding()).toBe('\n');
+  });
+
+  it('returns "\\n" on linux', async () => {
+    vi.mocked(os.platform).mockReturnValue('linux');
+    const { getCommandLineEnding } = await import('../../../src/utils/platform');
+    expect(getCommandLineEnding()).toBe('\n');
+  });
+});
+
 describe('getDefaultShell', () => {
   const originalShellEnv = process.env.SHELL;
 

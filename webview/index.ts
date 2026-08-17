@@ -44,10 +44,53 @@ const rateLimitBar = new RateLimitBar(app, openFolder, quit);
 let focusedPaneId: string | null = null;
 let maximizedPaneId: string | null = null;
 
+const DEFAULT_FONT_SIZE = 13;
+let currentFontSize = DEFAULT_FONT_SIZE;
+
 const isMac = navigator.userAgent.includes('Macintosh');
+const isWindows = navigator.userAgent.includes('Windows');
 
 function postMessage(msg: WebviewToHostMessage): void {
   vscode.postMessage(msg);
+}
+
+// ============================================================
+// クリップボード取得（Windows Ctrl+V 貼り付け用）
+// ============================================================
+
+const CLIPBOARD_REQUEST_TIMEOUT_MS = 3000;
+const clipboardResolvers = new Map<string, (text: string) => void>();
+
+/** 拡張ホストへクリップボードの内容を問い合わせる（タイムアウト付き） */
+function requestClipboardFromHost(): Promise<string> {
+  return new Promise((resolve) => {
+    const requestId = crypto.randomUUID();
+    const timeoutId = setTimeout(() => {
+      clipboardResolvers.delete(requestId);
+      resolve('');
+    }, CLIPBOARD_REQUEST_TIMEOUT_MS);
+    clipboardResolvers.set(requestId, (text: string) => {
+      clearTimeout(timeoutId);
+      resolve(text);
+    });
+    postMessage({ type: 'requestClipboard', requestId });
+  });
+}
+
+/**
+ * クリップボードのテキストを取得する。
+ * navigator.clipboard.readText() が権限で拒否/空文字の場合は拡張ホスト経由でフォールバックする。
+ */
+async function getClipboardText(): Promise<string> {
+  try {
+    const text = await navigator.clipboard.readText();
+    if (text) {
+      return text;
+    }
+  } catch {
+    // 権限拒否などは無視してフォールバックへ
+  }
+  return requestClipboardFromHost();
 }
 
 function focusPane(id: string): void {
@@ -202,7 +245,10 @@ window.addEventListener('message', (event: MessageEvent<HostToWebviewMessage>) =
         (id) => focusPane(id),
         keyHandler,
         (id) => toggleMaximize(id),
-        msg.customName
+        msg.customName,
+        currentFontSize,
+        isWindows,
+        getClipboardText
       );
       panes.set(msg.terminalId, pane);
       paneOrder.push(msg.terminalId);
@@ -252,9 +298,8 @@ window.addEventListener('message', (event: MessageEvent<HostToWebviewMessage>) =
     }
     case 'rateLimitUpdate': {
       rateLimitBar.update({
-        fiveHour: msg.fiveHour,
-        sevenDay: msg.sevenDay,
-        sevenDaySonnet: msg.sevenDaySonnet,
+        windows: msg.windows,
+        extraUsage: msg.extraUsage,
       });
       break;
     }
@@ -307,6 +352,26 @@ window.addEventListener('message', (event: MessageEvent<HostToWebviewMessage>) =
           toggleMaximize(maximizedPaneId); // 最大化解除
         }
         focusPane(targetId);
+      }
+      break;
+    }
+    case 'setFontSize': {
+      currentFontSize = msg.fontSize;
+      for (const p of panes.values()) {
+        p.setFontSize(currentFontSize);
+      }
+      rateLimitBar.updateFontSize(currentFontSize);
+      break;
+    }
+    case 'terminalStatusUpdate': {
+      panes.get(msg.terminalId)?.updateStatus(msg.status);
+      break;
+    }
+    case 'clipboardContent': {
+      const resolve = clipboardResolvers.get(msg.requestId);
+      if (resolve) {
+        clipboardResolvers.delete(msg.requestId);
+        resolve(msg.text);
       }
       break;
     }

@@ -21,8 +21,33 @@ export const COMMAND_FOCUS_PANE_6 = 'agentPanel.focusPane6';
 export const COMMAND_FOCUS_PANE_7 = 'agentPanel.focusPane7';
 export const COMMAND_FOCUS_PANE_8 = 'agentPanel.focusPane8';
 export const COMMAND_FOCUS_PANE_9 = 'agentPanel.focusPane9';
+export const COMMAND_FONT_SIZE_INCREASE = 'agentPanel.fontSizeIncrease';
+export const COMMAND_FONT_SIZE_DECREASE = 'agentPanel.fontSizeDecrease';
+export const COMMAND_FONT_SIZE_RESET = 'agentPanel.fontSizeReset';
 export const EXTENSION_ID = 'agent-panel';
 export const SESSION_STORAGE_KEY = 'agentPanel.sessions';
 export const RATE_LIMIT_CACHE_TTL = 300_000; // 5分
+
+export const RATE_LIMIT_LABELS: Record<string, string> = {
+  five_hour: '5h',
+  seven_day: '7d',
+  seven_day_opus: 'Opus',
+  seven_day_sonnet: 'Sonnet',
+  nimbus_quill: 'Fable',
+  cinder_cove: 'Fable',
+  seven_day_cowork: 'Cowork',
+  seven_day_oauth_apps: 'Apps',
+};
+
+export const RATE_LIMIT_ORDER = [
+  'five_hour',
+  'seven_day',
+  'seven_day_opus',
+  'seven_day_sonnet',
+  'nimbus_quill',
+  'cinder_cove',
+  'seven_day_cowork',
+  'seven_day_oauth_apps',
+];
 export const RECENT_DIRECTORIES_KEY = 'agentPanel.recentDirectories';
 export const RECENT_DIRECTORIES_MAX = 20;

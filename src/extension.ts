@@ -12,6 +12,9 @@ import {
   COMMAND_OPEN_EXPLORER,
   COMMAND_DELETE_WORD_BACK,
   COMMAND_TOGGLE_MAXIMIZE,
+  COMMAND_FONT_SIZE_INCREASE,
+  COMMAND_FONT_SIZE_DECREASE,
+  COMMAND_FONT_SIZE_RESET,
   RATE_LIMIT_CACHE_TTL,
 } from './constants';
 import { StatusBarManager } from './managers/StatusBarManager';
@@ -53,6 +56,14 @@ export function activate(context: vscode.ExtensionContext) {
           terminalId,
         });
         statusBar.updateBadge(terminalManager?.count ?? 0);
+      },
+      // onStatusChange: ステータスインジケーター更新
+      (terminalId, status) => {
+        panelManager.postMessage({
+          type: 'terminalStatusUpdate',
+          terminalId,
+          status,
+        });
       }
     );
 
@@ -82,9 +93,8 @@ export function activate(context: vscode.ExtensionContext) {
     if (info) {
       panelManager.postMessage({
         type: 'rateLimitUpdate',
-        fiveHour: info.fiveHour,
-        sevenDay: info.sevenDay,
-        sevenDaySonnet: info.sevenDaySonnet,
+        windows: info.windows,
+        extraUsage: info.extraUsage,
       });
     }
   }
@@ -92,8 +102,9 @@ export function activate(context: vscode.ExtensionContext) {
   async function handleWebviewMessage(msg: WebviewToHostMessage): Promise<void> {
     switch (msg.type) {
       case 'ready':
-        // ロケールを送信
+        // ロケール・フォントサイズを送信
         panelManager.postMessage({ type: 'setLocale', locale: vscode.env.language });
+        panelManager.postMessage({ type: 'setFontSize', fontSize: getFontSize() });
         // バックグラウンドで動いてるターミナルがあれば再接続
         if (terminalManager && terminalManager.count > 0) {
           const terminals = terminalManager.getAllTerminals();
@@ -171,6 +182,11 @@ export function activate(context: vscode.ExtensionContext) {
       }
       case 'openUrl': {
         vscode.env.openExternal(vscode.Uri.parse(msg.url));
+        break;
+      }
+      case 'requestClipboard': {
+        const text = await vscode.env.clipboard.readText();
+        panelManager.postMessage({ type: 'clipboardContent', requestId: msg.requestId, text });
         break;
       }
       case 'requestQuit': {
@@ -297,6 +313,33 @@ export function activate(context: vscode.ExtensionContext) {
   const toggleMaximizeCmd = vscode.commands.registerCommand(COMMAND_TOGGLE_MAXIMIZE, () => {
     panelManager.postMessage({ type: 'toggleMaximize' });
   });
+  function getFontSize(): number {
+    return vscode.workspace.getConfiguration('agentPanel').get<number>('fontSize', 13);
+  }
+
+  function setFontSize(size: number): void {
+    const clamped = Math.min(24, Math.max(10, size));
+    vscode.workspace.getConfiguration('agentPanel').update('fontSize', clamped, vscode.ConfigurationTarget.Global);
+    panelManager.postMessage({ type: 'setFontSize', fontSize: clamped });
+  }
+
+  const fontSizeIncreaseCmd = vscode.commands.registerCommand(COMMAND_FONT_SIZE_INCREASE, () => {
+    setFontSize(getFontSize() + 1);
+  });
+  const fontSizeDecreaseCmd = vscode.commands.registerCommand(COMMAND_FONT_SIZE_DECREASE, () => {
+    setFontSize(getFontSize() - 1);
+  });
+  const fontSizeResetCmd = vscode.commands.registerCommand(COMMAND_FONT_SIZE_RESET, () => {
+    setFontSize(13);
+  });
+
+  // 設定画面からの変更を検知
+  const configWatcher = vscode.workspace.onDidChangeConfiguration((e) => {
+    if (e.affectsConfiguration('agentPanel.fontSize')) {
+      const size = getFontSize();
+      panelManager.postMessage({ type: 'setFontSize', fontSize: Math.min(24, Math.max(10, size)) });
+    }
+  });
 
   // ペイン番号ジャンプコマンド（1〜9）
   const focusPaneCmds: vscode.Disposable[] = [];
@@ -319,6 +362,7 @@ export function activate(context: vscode.ExtensionContext) {
     openCommand, newTerminalCommand,
     focusUpCmd, focusDownCmd, focusLeftCmd, focusRightCmd,
     closeTermCmd, openVscTermCmd, openExplorerCmd, deleteWordBackCmd, toggleMaximizeCmd,
+    fontSizeIncreaseCmd, fontSizeDecreaseCmd, fontSizeResetCmd, configWatcher,
     ...focusPaneCmds,
     {
       dispose: () => {

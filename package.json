@@ -2,7 +2,7 @@
   "name": "agent-panel",
   "displayName": "Agent Panel",
   "description": "Manage multiple terminals in a grid layout",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "publisher": "gfonius",
   "license": "MIT",
   "icon": "images/icon.png",
@@ -105,6 +105,18 @@
       {
         "command": "agentPanel.focusPane9",
         "title": "Agent Panel: Focus Pane 9"
+      },
+      {
+        "command": "agentPanel.fontSizeIncrease",
+        "title": "Agent Panel: Increase Font Size"
+      },
+      {
+        "command": "agentPanel.fontSizeDecrease",
+        "title": "Agent Panel: Decrease Font Size"
+      },
+      {
+        "command": "agentPanel.fontSizeReset",
+        "title": "Agent Panel: Reset Font Size"
       }
     ],
     "keybindings": [
@@ -215,8 +227,38 @@
         "key": "ctrl+9",
         "mac": "cmd+9",
         "when": "agentPanel.active"
+      },
+      {
+        "command": "agentPanel.fontSizeIncrease",
+        "key": "ctrl+=",
+        "mac": "cmd+=",
+        "when": "agentPanel.active"
+      },
+      {
+        "command": "agentPanel.fontSizeDecrease",
+        "key": "ctrl+-",
+        "mac": "cmd+-",
+        "when": "agentPanel.active"
+      },
+      {
+        "command": "agentPanel.fontSizeReset",
+        "key": "ctrl+0",
+        "mac": "cmd+0",
+        "when": "agentPanel.active"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "Agent Panel",
+      "properties": {
+        "agentPanel.fontSize": {
+          "type": "number",
+          "default": 13,
+          "minimum": 10,
+          "maximum": 24,
+          "description": "Font size for terminal panes"
+        }
+      }
+    }
   },
   "dependencies": {
     "node-pty": "^1.0.0"

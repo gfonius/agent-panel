@@ -3,6 +3,7 @@ import { FitAddon } from '@xterm/addon-fit';
 import { WebglAddon } from '@xterm/addon-webgl';
 import type { WebviewToHostMessage } from '../src/protocol/messages';
 import { createFilePathLinkProvider, createUrlLinkProvider } from './linkProvider';
+import { shouldInterceptPaste } from './pasteUtils';
 
 export class TerminalPane {
   readonly id: string;
@@ -14,6 +15,7 @@ export class TerminalPane {
   private focused: boolean = false;
   private onMaximizeToggle?: (id: string) => void;
   private badgeElement: HTMLElement;
+  private statusElement: HTMLElement;
   private titleElement: HTMLElement;
   private customName?: string;
   private isRenaming = false;
@@ -26,7 +28,10 @@ export class TerminalPane {
     onFocus?: (id: string) => void,
     keyHandler?: (e: KeyboardEvent) => boolean,
     onMaximizeToggle?: (id: string) => void,
-    customName?: string
+    customName?: string,
+    fontSize?: number,
+    isWindows?: boolean,
+    getClipboardText?: () => Promise<string>
   ) {
     this.id = id;
     this.directory = directory;
@@ -45,6 +50,9 @@ export class TerminalPane {
     this.badgeElement = document.createElement('span');
     this.badgeElement.className = 'terminal-pane__badge';
     this.badgeElement.textContent = '';
+
+    this.statusElement = document.createElement('span');
+    this.statusElement.className = 'terminal-pane__status';
 
     this.titleElement = document.createElement('span');
     this.titleElement.className = 'terminal-pane__title';
@@ -91,6 +99,7 @@ export class TerminalPane {
     });
 
     header.appendChild(this.badgeElement);
+    header.appendChild(this.statusElement);
     header.appendChild(this.titleElement);
     header.appendChild(closeBtn);
     this.element.appendChild(header);
@@ -104,7 +113,7 @@ export class TerminalPane {
 
     // xterm.js 初期化
     this.terminal = new Terminal({
-      fontSize: 13,
+      fontSize: fontSize ?? 13,
       fontFamily: 'Menlo, Monaco, "Courier New", monospace',
       cursorBlink: true,
       cursorStyle: 'block',
@@ -138,7 +147,20 @@ export class TerminalPane {
 
     // カスタムキーイベントハンドラを登録
     if (keyHandler) {
-      this.terminal.attachCustomKeyEventHandler(keyHandler);
+      this.terminal.attachCustomKeyEventHandler((e: KeyboardEvent): boolean => {
+        // Windows: Ctrl+V を横取りして terminal.paste() 経由で貼り付ける
+        // (bracketed paste mode を維持するため pty へ直接書き込まない)
+        if (isWindows && getClipboardText && shouldInterceptPaste(e, isWindows)) {
+          e.preventDefault();
+          void getClipboardText().then((text) => {
+            if (text) {
+              this.terminal.paste(text);
+            }
+          });
+          return false;
+        }
+        return keyHandler(e);
+      });
     }
 
     // フィット
@@ -205,6 +227,17 @@ export class TerminalPane {
     this.fitAddon.fit();
   }
 
+  setFontSize(size: number): void {
+    this.terminal.options.fontSize = size;
+    this.fitAddon.fit();
+    this.postMessage({
+      type: 'terminalResize',
+      terminalId: this.id,
+      cols: this.terminal.cols,
+      rows: this.terminal.rows,
+    });
+  }
+
   destroy(): void {
     this.terminal.dispose();
     this.element.remove();
@@ -212,6 +245,13 @@ export class TerminalPane {
 
   updatePaneNumber(num: number): void {
     this.badgeElement.textContent = String(num);
+  }
+
+  updateStatus(status: 'idle' | 'thinking' | 'waiting' | 'error'): void {
+    this.statusElement.className = 'terminal-pane__status';
+    if (status !== 'idle') {
+      this.statusElement.classList.add(`terminal-pane__status--${status}`);
+    }
   }
 
   getCustomName(): string | undefined {

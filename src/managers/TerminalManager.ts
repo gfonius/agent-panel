@@ -1,5 +1,6 @@
-import { getDefaultShell, getShellArgs } from '../utils/platform';
+import { getDefaultShell, getShellArgs, getCommandLineEnding } from '../utils/platform';
 import { parseResumeId } from '../utils/sessionParser';
+import { createStatusDetector, type TerminalStatus } from '../utils/statusDetector';
 
 // node-ptyはネイティブモジュールのため遅延読み込み
 // トップレベルimportだとElectronとのABI不一致で拡張が起動しない
@@ -18,13 +19,18 @@ export class TerminalManager {
   private onData: (terminalId: string, data: string) => void;
   private onExit: (terminalId: string) => void;
   private suppressExitNotifications = false;
+  private statusDetector;
 
   constructor(
     onData: (terminalId: string, data: string) => void,
-    onExit: (terminalId: string) => void
+    onExit: (terminalId: string) => void,
+    onStatusChange?: (terminalId: string, status: TerminalStatus) => void
   ) {
     this.onData = onData;
     this.onExit = onExit;
+    this.statusDetector = createStatusDetector(
+      onStatusChange ?? (() => {})
+    );
   }
 
   create(directory: string, resumeId?: string): string {
@@ -47,6 +53,7 @@ export class TerminalManager {
 
     ptyProcess.onData((data: string) => {
       this.onData(id, data);
+      this.statusDetector.processData(id, data);
     });
 
     ptyProcess.onExit(() => {
@@ -60,10 +67,11 @@ export class TerminalManager {
 
     // シェル起動後にclaudeを実行
     setTimeout(() => {
+      const eol = getCommandLineEnding();
       if (resumeId) {
-        ptyProcess.write(`claude --resume ${resumeId}\n`);
+        ptyProcess.write(`claude --resume ${resumeId}${eol}`);
       } else {
-        ptyProcess.write('claude\n');
+        ptyProcess.write(`claude${eol}`);
       }
     }, 500); // シェル起動待ち
 
@@ -83,6 +91,7 @@ export class TerminalManager {
     if (terminal) {
       terminal.pty.kill();
       this.terminals.delete(terminalId);
+      this.statusDetector.removeTerminal(terminalId);
     }
   }
 

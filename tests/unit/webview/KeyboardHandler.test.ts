@@ -168,14 +168,26 @@ describe('KeyboardHandler', () => {
         expect(handler(e)).toBe(false);
       });
 
-      it('Cmd+0 → returns true (not handled)', () => {
-        const e = makeEvent({ metaKey: true, key: '0' });
-        expect(handler(e)).toBe(true);
-      });
-
       it('Cmd+Shift+1 → returns true (different modifiers)', () => {
         const e = makeEvent({ metaKey: true, shiftKey: true, key: '1' });
         expect(handler(e)).toBe(true);
+      });
+    });
+
+    describe('Cmd+=/Cmd+-/Cmd+0 (font size)', () => {
+      it('Cmd+= → returns false', () => {
+        const e = makeEvent({ metaKey: true, key: '=' });
+        expect(handler(e)).toBe(false);
+      });
+
+      it('Cmd+- → returns false', () => {
+        const e = makeEvent({ metaKey: true, key: '-' });
+        expect(handler(e)).toBe(false);
+      });
+
+      it('Cmd+0 → returns false', () => {
+        const e = makeEvent({ metaKey: true, key: '0' });
+        expect(handler(e)).toBe(false);
       });
     });
   });
@@ -277,9 +289,22 @@ describe('KeyboardHandler', () => {
         expect(handler(e)).toBe(false);
       });
 
-      it('Ctrl+0 → returns true (not handled)', () => {
+    });
+
+    describe('Ctrl+=/Ctrl+-/Ctrl+0 (font size)', () => {
+      it('Ctrl+= → returns false', () => {
+        const e = makeEvent({ ctrlKey: true, key: '=' });
+        expect(handler(e)).toBe(false);
+      });
+
+      it('Ctrl+- → returns false', () => {
+        const e = makeEvent({ ctrlKey: true, key: '-' });
+        expect(handler(e)).toBe(false);
+      });
+
+      it('Ctrl+0 → returns false', () => {
         const e = makeEvent({ ctrlKey: true, key: '0' });
-        expect(handler(e)).toBe(true);
+        expect(handler(e)).toBe(false);
       });
     });
   });

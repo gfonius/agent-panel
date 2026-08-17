@@ -1,3 +1,5 @@
+import type { ExtraUsage, RateLimitWindow } from '../types';
+
 // Host → Webview
 export type HostToWebviewMessage =
   | { type: 'terminalCreated'; terminalId: string; directory: string; customName?: string }
@@ -5,9 +7,8 @@ export type HostToWebviewMessage =
   | { type: 'terminalClosed'; terminalId: string }
   | {
       type: 'rateLimitUpdate';
-      fiveHour: { utilization: number; resetsAt: string };
-      sevenDay: { utilization: number; resetsAt: string };
-      sevenDaySonnet: { utilization: number; resetsAt: string } | null;
+      windows: RateLimitWindow[];
+      extraUsage: ExtraUsage | null;
     }
   | { type: 'focusDirection'; direction: 'up' | 'down' | 'left' | 'right' }
   | { type: 'closeActiveTerminal' }
@@ -18,6 +19,9 @@ export type HostToWebviewMessage =
   | { type: 'toggleMaximize' }
   | { type: 'quitting' }
   | { type: 'focusPaneByIndex'; index: number }
+  | { type: 'setFontSize'; fontSize: number }
+  | { type: 'terminalStatusUpdate'; terminalId: string; status: 'idle' | 'thinking' | 'waiting' | 'error' }
+  | { type: 'clipboardContent'; requestId: string; text: string }
 
 // Webview → Host
 export type WebviewToHostMessage =
@@ -34,3 +38,4 @@ export type WebviewToHostMessage =
   | { type: 'openUrl'; url: string }
   | { type: 'requestQuit' }
   | { type: 'paneRenamed'; terminalId: string; customName: string }
+  | { type: 'requestClipboard'; requestId: string }
