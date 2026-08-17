@@ -1,132 +1,102 @@
-# feature/usage-limits
+# fix/windows-terminal-input
 
 ## 概要
-Claude の使用量枠の仕様変更に追従する。固定3枠のハードコードをやめ、
-API が返した枠だけを動的に描画する方式へ変更する。
+Windows 環境で報告された2件の不具合を修正する。
+**いずれも Windows のときだけ分岐し、macOS / Linux の既存挙動は一切変えない。**
 
-## 背景（調査結果）
-Claude Code CLI v2.1.228 のバイナリおよび 2月版 cli.js から確認:
+## 不具合1: 起動時に Enter を押さないと PowerShell のまま
 
-- `/api/oauth/usage` が返しうる枠キー
-  - `five_hour` … "Current session"
-  - `seven_day` … "Current week (all models)"
-  - `seven_day_opus` … "Opus limit"
-  - `seven_day_sonnet` … "Current week (Sonnet only)" / Pro・Enterprise では "weekly limit"
-  - `seven_day_oauth_apps` … OAuth アプリ経由
-  - `cinder_cove` … "Fable 5 limit"（2月版には存在せず、後から追加された枠）
-  - `extra_usage` … "usage credit limit"（クレジット制・別構造）
-- どの枠が返るかは **プランと時期に依存**。CLI 自身も
-  `limit && <Row/>` で「返ってきた枠だけ描画」している。
+### 原因
+`src/managers/TerminalManager.ts` がシェル起動後に送る初期コマンドの終端が `\n`（LF）。
 
-### 枠オブジェクトの型
 ```ts
-{ utilization: number | null, resets_at: string | null }
+ptyProcess.write(`claude --resume ${resumeId}\n`);
+ptyProcess.write('claude\n');
 ```
-- `utilization === null` の枠は行ごと描画しない（CLI と同じ挙動）
-- `resets_at` も null 許容
 
-### extra_usage の型
-```ts
-{ is_enabled: boolean, monthly_limit: number | null, used_credits: number, utilization: number }
-```
-- `monthly_limit === null` → "Unlimited"
-- Pro / Max プランのみ表示
+PowerShell / conpty は `\r`（CR）を Enter として扱うため、LF では行が確定しない。
+結果、`claude` がプロンプトに入力されたまま実行されず、ユーザーが Enter を押して初めて起動する。
 
-## 現行実装の問題
-1. `five_hour` / `seven_day` / `seven_day_sonnet` の3枠固定 → Fable・Opus・クレジット枠が表示されない
-2. `utilization` / `resets_at` の null を考慮していない → NaN・0% 誤表示の可能性
-3. 枠が増減するたびに型と UI の両方を書き換える必要がある
+なお同ファイルの終了処理では既に `\r` を使っており、実装が一貫していない。
 
-## 方針
-枠を配列化し、UI は存在する枠だけ行を生やす。未知キーはキー名フォールバックで表示。
+### 方針
+`src/utils/platform.ts` に改行文字を返す関数を追加し、Windows のみ `\r` を返す。
+macOS / Linux は現行どおり `\n` を維持する（挙動を変えない）。
+
+## 不具合2: Ctrl+V が効かない
+
+### 原因
+`webview/KeyboardHandler.ts` の修飾キー判定が `isMac ? metaKey : ctrlKey` のため、
+Windows では Ctrl が拡張側のショートカット修飾キーになっている。
+加えて xterm.js が Ctrl+V を通常のキー入力として処理するため、
+textarea に paste イベントが到達せず、ブラウザのネイティブ貼り付けが発生しない。
+
+### 方針
+xterm.js の公開 API `terminal.paste(data)` を使う（`@xterm/xterm` 5.5.0 で提供）。
+
+1. Windows のときだけ Ctrl+V を捕捉する
+2. `navigator.clipboard.readText()` でクリップボードを読む
+3. `terminal.paste(text)` に渡す
+4. `preventDefault()` で二重貼り付けを防ぐ
+
+**`terminal.paste()` を使う理由**: bracketed paste mode（`\x1b[200~` … `\x1b[201~`）を
+正しく処理するため。pty へ直接 write すると囲みが付かず、複数行テキストを貼った際に
+改行がすべて Enter として解釈され、行ごとに送信されてしまう。
+
+### フォールバック
+VS Code の webview では `navigator.clipboard.readText()` が権限で拒否される可能性がある。
+失敗時は拡張ホストの `vscode.env.clipboard.readText()` にメッセージで問い合わせ、
+返ってきたテキストを `terminal.paste()` に渡す。
+
+## 対象外（今回は触らない）
+Windows では以下が xterm のターミナル操作と衝突しているが、操作体系の変更になるため別途検討する。
+
+| ショートカット | 拡張の割当 | ターミナル本来の動作 |
+|---|---|---|
+| `Ctrl+W` | ペインを閉じる | 単語削除 |
+| `Ctrl+F` | エクスプローラーで開く | カーソル前進 |
+| `Ctrl+N` | 新規ターミナル | 履歴を次へ |
+| `Ctrl+T` | VSCodeターミナル | 文字入れ替え |
 
 ## 進捗
-- [x] 型定義変更 (src/types.ts)
-- [x] ラベルマッピング追加 (src/constants.ts)
-- [x] レスポンスパース動的化 (src/utils/rateLimitClient.ts)
-- [x] 既存テスト更新 + 新規テスト (tests/unit/utils/rateLimitClient.test.ts) — 13→26テスト
-- [x] protocol 型更新 (src/protocol/messages.ts)
-- [x] UI 動的レンダリング (webview/RateLimitBar.ts)
-- [x] extra_usage 表示対応（Intl.NumberFormatで通貨整形、$ 決め打ちなし）
-- [x] スタイル調整 (webview/styles/main.css)
-- [x] i18n ラベル追加 (webview/i18n.ts に rate.credit / rate.unlimited)
-- [x] テスト・ビルド確認（`npm run test` 176件全通過 / `npm run compile` 成功）
+- [x] platform.ts に改行文字・Windows判定を追加 + テスト
+- [x] TerminalManager.ts の初期コマンド送信を修正
+- [x] Ctrl+V 判定ロジックを純粋関数として実装 + テスト
+- [x] TerminalPane に paste 処理を配線
+- [x] クリップボード読み取りのフォールバック（拡張ホスト経由）
+- [x] protocol/messages.ts に往復メッセージを追加
+- [x] テスト・ビルド確認
 
-## 実データ確認結果（判明した仕様）
-`/api/oauth/usage` の実レスポンスを確認できた。想定と異なっていた点:
+### 実装メモ
+- `src/utils/platform.ts`: `isWindows()` / `getCommandLineEnding()` を追加。
+  `getDefaultShell` / `isMac` と同じ `os.platform()` モック方式でテスト。
+- `src/managers/TerminalManager.ts`: `create()` の初期コマンド送信を
+  `getCommandLineEnding()` の返り値（win32: `\r` / それ以外: `\n`）で送信するよう変更。
+  この関数は node-pty 依存で単体テスト対象外のため、直接テストは追加していない
+  （`getCommandLineEnding()` 自体のテストで担保）。
+- `webview/pasteUtils.ts`: `shouldInterceptPaste(e, isWindows)` を純粋関数として新規作成。
+  isWindows=false（Mac/Linux）では常に false を返すため、既存挙動には影響しない。
+- `webview/TerminalPane.ts`: `attachCustomKeyEventHandler` に渡す関数をラップし、
+  `shouldInterceptPaste` が true の場合のみ `preventDefault` + `terminal.paste()` を実行。
+  非Windowsでは `isWindows` 引数が false/undefined なので常に元の `keyHandler` に委譲される。
+- `webview/index.ts`: `isWindows` 判定（UA文字列）、`getClipboardText()`
+  （`navigator.clipboard.readText()` → 失敗/空文字時は拡張ホストへ `requestClipboard` を
+  postMessage → `clipboardContent` 応答を Promise resolve、3秒タイムアウトで空文字resolve）を追加。
+  `terminalCreated` 時に `isWindows` と `getClipboardText` を TerminalPane に渡すよう変更。
+- `src/protocol/messages.ts`: `requestClipboard` (Webview→Host) / `clipboardContent` (Host→Webview)
+  を追加。
+- `src/extension.ts`: `requestClipboard` 受信時に `vscode.env.clipboard.readText()` を呼び、
+  `clipboardContent` で返す処理を追加。
 
-- **対象外の枠はキーの値そのものが `null`** で返る（`{ utilization: null }` ではない）。
-  非null で返ったのは `five_hour` / `seven_day` / `nimbus_quill` の3枠のみ。
-  null で返った枠: `seven_day_oauth_apps` / `seven_day_opus` / `seven_day_sonnet` /
-  `seven_day_cowork` / `seven_day_omelette` / `tangelo` / `iguana_necktie` /
-  `omelette_promotional` / `cinder_cove` / `amber_ladder`
-  → 判定を `v !== null && typeof v === 'object' && typeof v.utilization === 'number'` に変更。
-- **`nimbus_quill` が実際の Fable 枠**と判明（ユーザーのWeb画面の「5h/7d/Fable」の3枠と一致）。
-  `cinder_cove` は将来用にラベルマップへ残しつつ、`RATE_LIMIT_ORDER` では `nimbus_quill` を先に配置。
-- 枠オブジェクトには `limit_dollars` / `used_dollars` / `remaining_dollars` も含まれる。
-  `RateLimitWindow` にオプショナルフィールドとして追加（今回はパースのみ、UI描画は行わない）。
-- `extra_usage` は当初想定より複雑で、`currency` / `decimal_places` / `spend_limit_reached` /
-  `disabled_reason` などを含む。金額表示は `$` 決め打ちをやめ、`Intl.NumberFormat` で
-  `currency` と `decimal_places` を使って整形（欠落時は 'USD' / 2 にフォールバック）。
-- トップレベルには他に `limits`（配列）/ `spend`（オブジェクト）/
-  `member_dashboard_available`（bool）も含まれるが、今回は未使用。誤って枠として
-  拾わないことをテストで保証済み。
+### テスト結果
+- `npm run test`: 236 passed（既存222 + platform.test.ts追加6 + pasteUtils.test.ts新規8）
+- `npm run compile`: extension / webview ともに成功
 
-## 未確認事項
-- なし（実データで検証済み）
-
-## レビュー指摘のバグ修正（TDD）
-
-コーディネーターのレビューで2件のバグを指摘され、TDDで修正した。
-
-### バグ1: `updateLocale()` がクレジット行を再描画しない
-- 症状: クレジット行のラベル (`rate.credit`) / "Unlimited" (`rate.unlimited`) は
-  行構築時に文字列として DOM に焼き付くため、言語切替 (`updateLocale()`) 時に
-  再生成されず旧言語のまま残っていた。
-- 修正: `webview/RateLimitBar.ts`
-  - `lastData: RateLimitData | null` を追加し、`update()` で直近データを保持
-  - 行生成部分を `private renderRows(data)` に切り出し、`update()` と
-    `updateLocale()` の両方から呼び出す
-  - `errorMessage.style.display` の切り替えは `renderRows()` に含めず `update()` 側にのみ残し、
-    `updateLocale()` 呼び出しではエラー表示状態を変更しないようにした
-  - `lastData` が null（初回 update 前）でも `updateLocale()` は安全に何もしない
-
-### バグ2: 不正な `currency` で `Intl.NumberFormat` が RangeError を投げる
-- 症状: `parseExtraUsage()` は `typeof eu.currency === 'string'` しか検証しておらず、
-  空文字や不正な長さの文字列がそのまま `ExtraUsage.currency` に入り、
-  `formatExtraUsage()` の `Intl.NumberFormat({ currency })` が RangeError を投げて
-  `update()` 全体が中断していた。
-- 修正（二重防御）:
-  1. パース側 `src/utils/rateLimitClient.ts`: `normalizeCurrency()` で ISO 4217 の
-     3文字英字コード（`/^[A-Za-z]{3}$/`）のみ許可し、それ以外は `'USD'` にフォールバック
-     （大文字化して保持）。`normalizeDecimalPlaces()` で 0〜20 の整数のみ許可、それ以外は `2`。
-  2. 表示側 `webview/RateLimitBar.ts`: `formatExtraUsage()` を DOM 非依存の純粋関数として
-     `export` し、`Intl.NumberFormat` 呼び出しを try/catch で保護。失敗時は
-     `"12.30 US / 50.00 US"` のように通貨コードを後置した素の数値表記にフォールバック
-     （フォールバック内の `decimalPlaces` も 0〜20 の範囲外なら 2 に再度サニタイズ）
-
-### 追加テスト
-- `tests/unit/utils/rateLimitClient.test.ts`: 26 → 37テスト
-  （currency 正規化5件 + decimalPlaces 境界値・範囲外テスト、`it.each` 含む）
-- `tests/unit/webview/RateLimitBar.test.ts`（新規）: 7テスト
-  `formatExtraUsage()` を DOM 非依存の純粋関数として直接テスト
-  （正常系のIntl整形・Unlimited表示・不正currencyでのフォールバック・
-  decimalPlaces異常値のサニタイズを検証）
-
-### DOMテストについて（報告事項）
-`RateLimitBar` クラス自体（`updateLocale()` 呼び出し時に実際にDOMの行が
-再構築されるか等）は `document.createElement` / `innerHTML` / `querySelector` /
-`classList` に依存しているが、本リポジトリの `vitest.config.ts` は
-`environment: 'node'` で jsdom 等のDOM実装が devDependencies に存在しない
-（既存の `tests/unit/webview/*.test.ts` も DOM を使わない純粋関数のみテストする方針）。
-そのため `updateLocale()` のクラスレベルの再描画自体の自動テストは追加していない。
-`formatExtraUsage()` を純粋関数として切り出すことで、少なくとも文字列整形ロジックは
-自動テストで担保した。クラスの DOM 挙動まで自動テストしたい場合は `jsdom`/`happy-dom`
-の追加とテスト環境設定の変更が別途必要になる。
-
-## 進捗（バグ修正後）
-- [x] バグ1修正: `updateLocale()` でのクレジット行再描画 (webview/RateLimitBar.ts)
-- [x] バグ2修正: currency/decimalPlaces のバリデーション（パース側・表示側の二重防御）
-- [x] TDD: 先にテストを書いて red を確認してから実装
-- [x] `npm run test` 全通過（194件: 既存176 + 新規18）
-- [x] `npm run compile` 成功
+## 検証について
+開発環境は macOS のため、**Windows 実機での動作確認は実施できない**。
+macOS 側は「既存挙動が変わっていないこと」を以下で確認済み:
+- `isMac()` 判定は変更なし、`getCommandLineEnding()` は darwin/linux で `\n` を返す
+- `shouldInterceptPaste()` は isWindows=false で常に false（KeyboardHandler本体・Ctrl+Vの
+  ブラウザネイティブ挙動は無変更）
+Windows 実機での確認（起動時Enter不要になるか、Ctrl+Vでの複数行貼り付けが1コマンドとして
+送信されるか、クリップボード権限拒否時のフォールバックが機能するか）はユーザーに依頼する。

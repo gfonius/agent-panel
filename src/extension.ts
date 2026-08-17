@@ -184,6 +184,11 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.env.openExternal(vscode.Uri.parse(msg.url));
         break;
       }
+      case 'requestClipboard': {
+        const text = await vscode.env.clipboard.readText();
+        panelManager.postMessage({ type: 'clipboardContent', requestId: msg.requestId, text });
+        break;
+      }
       case 'requestQuit': {
         // ターミナルなし → パネルだけ閉じる
         if (!terminalManager || terminalManager.count === 0) {

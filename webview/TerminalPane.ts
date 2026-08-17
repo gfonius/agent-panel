@@ -3,6 +3,7 @@ import { FitAddon } from '@xterm/addon-fit';
 import { WebglAddon } from '@xterm/addon-webgl';
 import type { WebviewToHostMessage } from '../src/protocol/messages';
 import { createFilePathLinkProvider, createUrlLinkProvider } from './linkProvider';
+import { shouldInterceptPaste } from './pasteUtils';
 
 export class TerminalPane {
   readonly id: string;
@@ -28,7 +29,9 @@ export class TerminalPane {
     keyHandler?: (e: KeyboardEvent) => boolean,
     onMaximizeToggle?: (id: string) => void,
     customName?: string,
-    fontSize?: number
+    fontSize?: number,
+    isWindows?: boolean,
+    getClipboardText?: () => Promise<string>
   ) {
     this.id = id;
     this.directory = directory;
@@ -144,7 +147,20 @@ export class TerminalPane {
 
     // カスタムキーイベントハンドラを登録
     if (keyHandler) {
-      this.terminal.attachCustomKeyEventHandler(keyHandler);
+      this.terminal.attachCustomKeyEventHandler((e: KeyboardEvent): boolean => {
+        // Windows: Ctrl+V を横取りして terminal.paste() 経由で貼り付ける
+        // (bracketed paste mode を維持するため pty へ直接書き込まない)
+        if (isWindows && getClipboardText && shouldInterceptPaste(e, isWindows)) {
+          e.preventDefault();
+          void getClipboardText().then((text) => {
+            if (text) {
+              this.terminal.paste(text);
+            }
+          });
+          return false;
+        }
+        return keyHandler(e);
+      });
     }
 
     // フィット

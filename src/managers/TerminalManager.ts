@@ -1,4 +1,4 @@
-import { getDefaultShell, getShellArgs } from '../utils/platform';
+import { getDefaultShell, getShellArgs, getCommandLineEnding } from '../utils/platform';
 import { parseResumeId } from '../utils/sessionParser';
 import { createStatusDetector, type TerminalStatus } from '../utils/statusDetector';
 
@@ -67,10 +67,11 @@ export class TerminalManager {
 
     // シェル起動後にclaudeを実行
     setTimeout(() => {
+      const eol = getCommandLineEnding();
       if (resumeId) {
-        ptyProcess.write(`claude --resume ${resumeId}\n`);
+        ptyProcess.write(`claude --resume ${resumeId}${eol}`);
       } else {
-        ptyProcess.write('claude\n');
+        ptyProcess.write(`claude${eol}`);
       }
     }, 500); // シェル起動待ち
 
