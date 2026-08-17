@@ -21,6 +21,7 @@ export type HostToWebviewMessage =
   | { type: 'focusPaneByIndex'; index: number }
   | { type: 'setFontSize'; fontSize: number }
   | { type: 'terminalStatusUpdate'; terminalId: string; status: 'idle' | 'thinking' | 'waiting' | 'error' }
+  | { type: 'clipboardContent'; requestId: string; text: string }
 
 // Webview → Host
 export type WebviewToHostMessage =
@@ -37,3 +38,4 @@ export type WebviewToHostMessage =
   | { type: 'openUrl'; url: string }
   | { type: 'requestQuit' }
   | { type: 'paneRenamed'; terminalId: string; customName: string }
+  | { type: 'requestClipboard'; requestId: string }
