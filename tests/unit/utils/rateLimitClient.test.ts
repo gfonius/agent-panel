@@ -1,3 +1,4 @@
+import * as path from 'path';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // vi.mock is hoisted - mock all dependencies before module evaluation
@@ -295,7 +296,8 @@ describe('fetchRateLimitInfo', () => {
 
     const fs = await import('fs');
     expect(result).not.toBeNull();
-    expect(fs.readFileSync).toHaveBeenCalledWith('/custom/config/.credentials.json', 'utf-8');
+    // 実装は path.join を使うため、区切り文字は実行 OS に従う
+    expect(fs.readFileSync).toHaveBeenCalledWith(path.join('/custom/config', '.credentials.json'), 'utf-8');
   });
 
   // NEW TESTS: dynamic window parsing (feature/usage-limits)

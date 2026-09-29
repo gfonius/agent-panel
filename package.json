@@ -122,7 +122,7 @@
     "keybindings": [
       {
         "command": "agentPanel.newTerminal",
-        "key": "ctrl+n",
+        "key": "ctrl+shift+n",
         "mac": "cmd+n",
         "when": "agentPanel.active"
       },
@@ -152,19 +152,19 @@
       },
       {
         "command": "agentPanel.closeTerminal",
-        "key": "ctrl+w",
+        "key": "ctrl+shift+w",
         "mac": "cmd+w",
         "when": "agentPanel.active"
       },
       {
         "command": "agentPanel.openVscodeTerminal",
-        "key": "ctrl+t",
+        "key": "ctrl+shift+t",
         "mac": "cmd+t",
         "when": "agentPanel.active"
       },
       {
         "command": "agentPanel.openExplorer",
-        "key": "ctrl+f",
+        "key": "ctrl+shift+f",
         "mac": "cmd+f",
         "when": "agentPanel.active"
       },
