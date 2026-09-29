@@ -1,5 +1,20 @@
 # Changelog / 変更履歴
 
+## [0.0.8] - 2026-09-29
+
+### Added / 追加
+- Ctrl+Enter sends "send now" to Claude Code / Ctrl+Enter で Claude Code の割り込み送信 (send now)
+  - Sent as kitty CSI u (`ESC[13;5u`) so it is distinguishable from Enter / Enter と区別できるよう CSI u 形式で送信
+- Windows: Ctrl+C copies when text is selected / Windows: 選択中の Ctrl+C はコピー
+
+### Changed / 変更
+- Windows/Linux: panel actions moved to Ctrl+Shift+N/W/T/F / Windows/Linux: パネル操作を Ctrl+Shift+N/W/T/F に変更
+  - Ctrl+W/T/F/N now reach Claude Code (word delete, task list, etc.) / Ctrl+W/T/F/N は Claude Code 側に渡す
+- Windows/Linux: Ctrl+Left/Right moves by word instead of jumping to line start/end / Windows/Linux: Ctrl+←/→ は単語移動
+
+### Fixed / 修正
+- Windows: Ctrl+V pasted twice / Windows: Ctrl+V で 2 回貼り付けられる問題
+
 ## [0.0.7] - 2026-08-17
 
 ### Added / 追加
