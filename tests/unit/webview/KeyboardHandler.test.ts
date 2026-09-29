@@ -244,27 +244,27 @@ describe('KeyboardHandler', () => {
       });
     });
 
-    describe('Ctrl+W/T/F/N triggers shortcuts on Windows', () => {
-      it('Ctrl+W → returns false and calls closeFocused', () => {
-        const e = makeEvent({ ctrlKey: true, key: 'w' });
+    describe('Ctrl+Shift+W/T/F/N triggers shortcuts on Windows', () => {
+      it('Ctrl+Shift+W → returns false and calls closeFocused', () => {
+        const e = makeEvent({ ctrlKey: true, shiftKey: true, key: 'W' });
         expect(handler(e)).toBe(false);
         expect(closeFocused).toHaveBeenCalledOnce();
       });
 
-      it('Ctrl+T → returns false and calls openVscodeTerminal', () => {
-        const e = makeEvent({ ctrlKey: true, key: 't' });
+      it('Ctrl+Shift+T → returns false and calls openVscodeTerminal', () => {
+        const e = makeEvent({ ctrlKey: true, shiftKey: true, key: 'T' });
         expect(handler(e)).toBe(false);
         expect(openVscodeTerminal).toHaveBeenCalledOnce();
       });
 
-      it('Ctrl+F → returns false and calls openExplorer', () => {
-        const e = makeEvent({ ctrlKey: true, key: 'f' });
+      it('Ctrl+Shift+F → returns false and calls openExplorer', () => {
+        const e = makeEvent({ ctrlKey: true, shiftKey: true, key: 'F' });
         expect(handler(e)).toBe(false);
         expect(openExplorer).toHaveBeenCalledOnce();
       });
 
-      it('Ctrl+N → returns false and posts requestFolderPicker', () => {
-        const e = makeEvent({ ctrlKey: true, key: 'n' });
+      it('Ctrl+Shift+N → returns false and posts requestFolderPicker', () => {
+        const e = makeEvent({ ctrlKey: true, shiftKey: true, key: 'N' });
         expect(handler(e)).toBe(false);
         expect(postMessage).toHaveBeenCalledWith({ type: 'requestFolderPicker' });
       });
@@ -307,5 +307,45 @@ describe('KeyboardHandler', () => {
         expect(handler(e)).toBe(false);
       });
     });
+  });
+});
+
+describe('Windows/Linux panel keys (Ctrl+Shift)', () => {
+  it('Ctrl+Shift+W → closeFocused', () => {
+    const { handler, closeFocused } = createHandler(false);
+    expect(handler(makeEvent({ ctrlKey: true, shiftKey: true, key: 'W' }))).toBe(false);
+    expect(closeFocused).toHaveBeenCalled();
+  });
+
+  it('Ctrl+W → passes to terminal (Claude Code word delete)', () => {
+    const { handler, closeFocused } = createHandler(false);
+    expect(handler(makeEvent({ ctrlKey: true, key: 'w' }))).toBe(true);
+    expect(closeFocused).not.toHaveBeenCalled();
+  });
+
+  it('Ctrl+T / Ctrl+F / Ctrl+N → pass to terminal', () => {
+    const { handler, openVscodeTerminal, openExplorer, postMessage } = createHandler(false);
+    for (const key of ['t', 'f', 'n']) {
+      expect(handler(makeEvent({ ctrlKey: true, key }))).toBe(true);
+    }
+    expect(openVscodeTerminal).not.toHaveBeenCalled();
+    expect(openExplorer).not.toHaveBeenCalled();
+    expect(postMessage).not.toHaveBeenCalled();
+  });
+
+  it('Ctrl+Shift+T / F / N → panel actions', () => {
+    const { handler, openVscodeTerminal, openExplorer, postMessage } = createHandler(false);
+    expect(handler(makeEvent({ ctrlKey: true, shiftKey: true, key: 'T' }))).toBe(false);
+    expect(handler(makeEvent({ ctrlKey: true, shiftKey: true, key: 'F' }))).toBe(false);
+    expect(handler(makeEvent({ ctrlKey: true, shiftKey: true, key: 'N' }))).toBe(false);
+    expect(openVscodeTerminal).toHaveBeenCalled();
+    expect(openExplorer).toHaveBeenCalled();
+    expect(postMessage).toHaveBeenCalledWith({ type: 'requestFolderPicker' });
+  });
+
+  it('Ctrl+Left/Right → passes to terminal (word move)', () => {
+    const { handler } = createHandler(false);
+    expect(handler(makeEvent({ ctrlKey: true, key: 'ArrowLeft' }))).toBe(true);
+    expect(handler(makeEvent({ ctrlKey: true, key: 'ArrowRight' }))).toBe(true);
   });
 });

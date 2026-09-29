@@ -24,22 +24,27 @@ A VS Code extension that manages multiple terminals in a grid layout.
 
 | Action / 操作 | macOS | Windows/Linux |
 |---------------|-------|---------------|
-| New terminal / 新規ターミナル | `Cmd+N` | `Ctrl+N` |
-| Close terminal / ターミナルを閉じる | `Cmd+W` | `Ctrl+W` |
-| Open in VS Code terminal / VSCodeターミナルで開く | `Cmd+T` | `Ctrl+T` |
+| New terminal / 新規ターミナル | `Cmd+N` | `Ctrl+Shift+N` |
+| Close terminal / ターミナルを閉じる | `Cmd+W` | `Ctrl+Shift+W` |
+| Open in VS Code terminal / VSCodeターミナルで開く | `Cmd+T` | `Ctrl+Shift+T` |
+| Open in file explorer / Finder・エクスプローラーで開く | `Cmd+F` | `Ctrl+Shift+F` |
 | Focus pane up / 上のペインへ | `Cmd+Shift+Up` | `Ctrl+Shift+Up` |
 | Focus pane down / 下のペインへ | `Cmd+Shift+Down` | `Ctrl+Shift+Down` |
 | Focus pane left / 左のペインへ | `Cmd+Shift+Left` | `Ctrl+Shift+Left` |
 | Focus pane right / 右のペインへ | `Cmd+Shift+Right` | `Ctrl+Shift+Right` |
 | Delete word back / 単語削除 | `Cmd+Backspace` | `Ctrl+Backspace` |
 | Line break / 改行 | `Shift+Enter` | `Shift+Enter` |
+| Send now (Claude Code) / 割り込み送信 | `Ctrl+Enter` | `Ctrl+Enter` |
+| Copy selection / 選択範囲をコピー | `Cmd+C` | `Ctrl+C` (with selection / 選択時) |
 | Cursor to line start / 行頭移動 | `Cmd+Left` | - |
 | Cursor to line end / 行末移動 | `Cmd+Right` | - |
-| Word cursor move / 単語移動 | `Option+Left/Right` | - |
+| Word cursor move / 単語移動 | `Option+Left/Right` | `Ctrl+Left/Right` |
 
 All shortcuts are active only when the Agent Panel is focused.
+On Windows/Linux, panel actions use `Ctrl+Shift` so that `Ctrl+W/T/F/N` reach Claude Code.
 
 ショートカットは Agent Panel にフォーカスがある場合のみ有効です。
+Windows/Linux のパネル操作は `Ctrl+Shift` です（`Ctrl+W/T/F/N` は Claude Code 側に渡します）。
 
 ## Installation / インストール
 

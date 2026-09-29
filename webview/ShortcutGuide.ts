@@ -18,15 +18,17 @@ export class ShortcutGuide {
 
   private updateContent(): void {
     const mod = isMac ? '⌘' : 'Ctrl+';
+    // パネル操作: macOS は ⌘、Windows/Linux は Claude Code のキーと衝突しないよう Ctrl+Shift
+    const panel = isMac ? '⌘' : 'Ctrl+Shift+';
     const shift = isMac ? '⇧' : 'Shift+';
     const del = isMac ? '⌫' : 'Bksp';
     const arrows = isMac ? '↑↓←→' : '↑↓←→';
 
     this.element.innerHTML = [
-      `<kbd>${mod}N</kbd> ${t('shortcut.new')}`,
-      `<kbd>${mod}W</kbd> ${t('shortcut.close')}`,
-      `<kbd>${mod}T</kbd> ${t('shortcut.vsterm')}`,
-      `<kbd>${mod}F</kbd> ${t('shortcut.explorer')}`,
+      `<kbd>${panel}N</kbd> ${t('shortcut.new')}`,
+      `<kbd>${panel}W</kbd> ${t('shortcut.close')}`,
+      `<kbd>${panel}T</kbd> ${t('shortcut.vsterm')}`,
+      `<kbd>${panel}F</kbd> ${t('shortcut.explorer')}`,
       `<kbd>${shift}${mod}${arrows}</kbd> ${t('shortcut.nav')}`,
       `<kbd>${mod}${del}</kbd> ${t('shortcut.wordDel')}`,
       `<kbd>⇧Enter</kbd> ${t('shortcut.newline')}`,
