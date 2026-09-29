@@ -9,6 +9,8 @@ import { ShortcutGuide } from './ShortcutGuide';
 import { setLocale as setI18nLocale, t } from './i18n';
 import { reorderPaneIds } from './paneOrderUtils';
 import { extractFilePaths } from './fileDropUtils';
+import { isSendNowKey, SEND_NOW_SEQUENCE } from './claudeKeys';
+import { isPanelActionKey } from './panelKeys';
 import type { HostToWebviewMessage, WebviewToHostMessage } from '../src/protocol/messages';
 
 declare function acquireVsCodeApi(): {
@@ -414,6 +416,16 @@ document.addEventListener('keydown', (e: KeyboardEvent) => {
     return;
   }
 
+  // Ctrl+Enter: Claude CLI の send now（実行中ターンに割り込んでキューを即送信）
+  if (isSendNowKey(e)) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (focusedPaneId) {
+      postMessage({ type: 'terminalInput', terminalId: focusedPaneId, data: SEND_NOW_SEQUENCE });
+    }
+    return;
+  }
+
   // Mod+Backspace: 単語削除
   if (mod(e) && !e.shiftKey && e.key === 'Backspace') {
     e.preventDefault();
@@ -424,8 +436,9 @@ document.addEventListener('keydown', (e: KeyboardEvent) => {
     return;
   }
 
-  // Mod+Arrow（Shiftなし）: カーソル移動（行頭/行末）
-  if (mod(e) && !e.shiftKey) {
+  // ⌘+Arrow（Shiftなし）: カーソル移動（行頭/行末）
+  // Windows/Linux の Ctrl+←/→ は単語移動としてそのままターミナルへ渡す
+  if (isMac && mod(e) && !e.shiftKey) {
     if (e.key === 'ArrowLeft') {
       e.preventDefault();
       e.stopPropagation();
@@ -498,32 +511,32 @@ document.addEventListener('keydown', (e: KeyboardEvent) => {
     }
   }
 
-  // Mod+W: フォーカス中のペインを閉じる
-  if (mod(e) && e.key === 'w' && !e.shiftKey) {
+  // ⌘W / Ctrl+Shift+W: フォーカス中のペインを閉じる
+  if (isPanelActionKey(e, isMac, 'w')) {
     e.preventDefault();
     e.stopPropagation();
     closeFocusedPane();
     return;
   }
 
-  // Mod+T: VSCodeターミナルで開く
-  if (mod(e) && e.key === 't' && !e.shiftKey) {
+  // ⌘T / Ctrl+Shift+T: VSCodeターミナルで開く
+  if (isPanelActionKey(e, isMac, 't')) {
     e.preventDefault();
     e.stopPropagation();
     openVscodeTerminalForFocused();
     return;
   }
 
-  // Mod+F: Finder/エクスプローラーで開く
-  if (mod(e) && e.key === 'f' && !e.shiftKey) {
+  // ⌘F / Ctrl+Shift+F: Finder/エクスプローラーで開く
+  if (isPanelActionKey(e, isMac, 'f')) {
     e.preventDefault();
     e.stopPropagation();
     openExplorerForFocused();
     return;
   }
 
-  // Mod+N: 新規ターミナル
-  if (mod(e) && e.key === 'n' && !e.shiftKey) {
+  // ⌘N / Ctrl+Shift+N: 新規ターミナル
+  if (isPanelActionKey(e, isMac, 'n')) {
     e.preventDefault();
     e.stopPropagation();
     postMessage({ type: 'requestFolderPicker' });

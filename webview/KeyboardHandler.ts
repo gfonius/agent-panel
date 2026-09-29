@@ -1,3 +1,6 @@
+import { isSendNowKey } from './claudeKeys';
+import { isPanelActionKey } from './panelKeys';
+
 export class KeyboardHandler {
   private postMessage: (msg: unknown) => void;
   private focusDirection: (direction: 'up' | 'down' | 'left' | 'right') => void;
@@ -34,7 +37,9 @@ export class KeyboardHandler {
       // xterm.jsのデフォルト処理を防ぐためfalseを返す
       if (e.type === 'keydown') {
         if (e.key === 'Enter' && e.shiftKey && !e.metaKey && !e.ctrlKey) return false;
-        if (this.mod(e) && !e.shiftKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) return false;
+        if (isSendNowKey(e)) return false;
+        // ⌘+←/→ は行頭/行末 (macOS のみ。Windows の Ctrl+←/→ は単語移動としてそのまま渡す)
+        if (this.isMac && this.mod(e) && !e.shiftKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) return false;
         if (this.mod(e) && !e.shiftKey && e.key === 'Backspace') return false;
         if (e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) return false;
         if (e.altKey && !e.metaKey && !e.ctrlKey && !e.shiftKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) return false;
@@ -65,26 +70,26 @@ export class KeyboardHandler {
         }
       }
 
-      // Mod+W: フォーカス中のペインを閉じる
-      if (this.mod(e) && e.key === 'w' && !e.shiftKey && e.type === 'keydown') {
+      // ⌘W / Ctrl+Shift+W: フォーカス中のペインを閉じる
+      if (isPanelActionKey(e, this.isMac, 'w')) {
         this.closeFocused();
         return false;
       }
 
-      // Mod+T: VSCodeターミナルで開く
-      if (this.mod(e) && e.key === 't' && !e.shiftKey && e.type === 'keydown') {
+      // ⌘T / Ctrl+Shift+T: VSCodeターミナルで開く
+      if (isPanelActionKey(e, this.isMac, 't')) {
         this.openVscodeTerminal();
         return false;
       }
 
-      // Mod+F: Finder/エクスプローラーで開く
-      if (this.mod(e) && e.key === 'f' && !e.shiftKey && e.type === 'keydown') {
+      // ⌘F / Ctrl+Shift+F: Finder/エクスプローラーで開く
+      if (isPanelActionKey(e, this.isMac, 'f')) {
         this.openExplorer();
         return false;
       }
 
-      // Mod+N: 新規ターミナル（フォルダーピッカー）
-      if (this.mod(e) && e.key === 'n' && !e.shiftKey && e.type === 'keydown') {
+      // ⌘N / Ctrl+Shift+N: 新規ターミナル（フォルダーピッカー）
+      if (isPanelActionKey(e, this.isMac, 'n')) {
         this.postMessage({ type: 'requestFolderPicker' });
         return false;
       }
