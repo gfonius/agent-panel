@@ -30,6 +30,7 @@ export class ShortcutGuide {
       `<kbd>${shift}${mod}${arrows}</kbd> ${t('shortcut.nav')}`,
       `<kbd>${mod}${del}</kbd> ${t('shortcut.wordDel')}`,
       `<kbd>⇧Enter</kbd> ${t('shortcut.newline')}`,
+      `<kbd>Ctrl+Enter</kbd> ${t('shortcut.sendNow')}`,
       `<kbd>${mod}1~9</kbd> ${t('shortcut.paneJump')}`,
       `<kbd>${mod}+/-/0</kbd> ${t('shortcut.fontSize')}`,
       `<kbd>DblClick</kbd> ${t('shortcut.maximize')}`,

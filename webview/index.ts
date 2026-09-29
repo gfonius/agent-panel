@@ -9,6 +9,7 @@ import { ShortcutGuide } from './ShortcutGuide';
 import { setLocale as setI18nLocale, t } from './i18n';
 import { reorderPaneIds } from './paneOrderUtils';
 import { extractFilePaths } from './fileDropUtils';
+import { isSendNowKey, SEND_NOW_SEQUENCE } from './claudeKeys';
 import type { HostToWebviewMessage, WebviewToHostMessage } from '../src/protocol/messages';
 
 declare function acquireVsCodeApi(): {
@@ -410,6 +411,16 @@ document.addEventListener('keydown', (e: KeyboardEvent) => {
     e.stopPropagation();
     if (focusedPaneId) {
       postMessage({ type: 'terminalInput', terminalId: focusedPaneId, data: '\n' });
+    }
+    return;
+  }
+
+  // Ctrl+Enter: Claude CLI の send now（実行中ターンに割り込んでキューを即送信）
+  if (isSendNowKey(e)) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (focusedPaneId) {
+      postMessage({ type: 'terminalInput', terminalId: focusedPaneId, data: SEND_NOW_SEQUENCE });
     }
     return;
   }
