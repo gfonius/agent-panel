@@ -1,3 +1,5 @@
+import { isSendNowKey } from './claudeKeys';
+
 export class KeyboardHandler {
   private postMessage: (msg: unknown) => void;
   private focusDirection: (direction: 'up' | 'down' | 'left' | 'right') => void;
@@ -34,6 +36,7 @@ export class KeyboardHandler {
       // xterm.jsのデフォルト処理を防ぐためfalseを返す
       if (e.type === 'keydown') {
         if (e.key === 'Enter' && e.shiftKey && !e.metaKey && !e.ctrlKey) return false;
+        if (isSendNowKey(e)) return false;
         if (this.mod(e) && !e.shiftKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) return false;
         if (this.mod(e) && !e.shiftKey && e.key === 'Backspace') return false;
         if (e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) return false;

@@ -3,7 +3,12 @@ import { FitAddon } from '@xterm/addon-fit';
 import { WebglAddon } from '@xterm/addon-webgl';
 import type { WebviewToHostMessage } from '../src/protocol/messages';
 import { createFilePathLinkProvider, createUrlLinkProvider } from './linkProvider';
-import { shouldInterceptPaste } from './pasteUtils';
+import {
+  shouldInterceptPaste,
+  shouldSuppressNativePaste,
+  shouldCopySelection,
+  NATIVE_PASTE_SUPPRESS_MS,
+} from './pasteUtils';
 
 export class TerminalPane {
   readonly id: string;
@@ -145,13 +150,34 @@ export class TerminalPane {
       createUrlLinkProvider(this.terminal, postMessage)
     );
 
+    // 横取りした Ctrl+V の後に届くネイティブ paste イベントを捨てる期限
+    let suppressNativePasteUntil = 0;
+    // xterm の textarea より先に拾うため、ペイン要素の capture で待ち受ける
+    this.element.addEventListener('paste', (ev) => {
+      if (shouldSuppressNativePaste(Date.now(), suppressNativePasteUntil)) {
+        suppressNativePasteUntil = 0;
+        ev.preventDefault();
+        ev.stopImmediatePropagation();
+      }
+    }, true);
+
     // カスタムキーイベントハンドラを登録
     if (keyHandler) {
       this.terminal.attachCustomKeyEventHandler((e: KeyboardEvent): boolean => {
+        // Windows: 選択中の Ctrl+C はコピー(^C を送ると Claude の入力が消える/中断される)
+        if (isWindows && shouldCopySelection(e, isWindows, this.terminal.hasSelection())) {
+          const text = this.terminal.getSelection();
+          void navigator.clipboard.writeText(text).then(
+            () => this.terminal.clearSelection(),
+            () => { /* 失敗時は選択を残し、ネイティブの copy に任せる */ }
+          );
+          return false;
+        }
         // Windows: Ctrl+V を横取りして terminal.paste() 経由で貼り付ける
         // (bracketed paste mode を維持するため pty へ直接書き込まない)
         if (isWindows && getClipboardText && shouldInterceptPaste(e, isWindows)) {
           e.preventDefault();
+          suppressNativePasteUntil = Date.now() + NATIVE_PASTE_SUPPRESS_MS;
           void getClipboardText().then((text) => {
             if (text) {
               this.terminal.paste(text);
