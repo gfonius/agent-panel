@@ -10,7 +10,7 @@ import { setLocale as setI18nLocale, t } from './i18n';
 import { reorderPaneIds } from './paneOrderUtils';
 import { extractFilePaths } from './fileDropUtils';
 import { isSendNowKey, SEND_NOW_SEQUENCE } from './claudeKeys';
-import { isPanelActionKey } from './panelKeys';
+import { isPanelActionKey, isNewTerminalKey } from './panelKeys';
 import type { HostToWebviewMessage, WebviewToHostMessage } from '../src/protocol/messages';
 
 declare function acquireVsCodeApi(): {
@@ -535,8 +535,8 @@ document.addEventListener('keydown', (e: KeyboardEvent) => {
     return;
   }
 
-  // ⌘N / Ctrl+Shift+N: 新規ターミナル
-  if (isPanelActionKey(e, isMac, 'n')) {
+  // ⌘N / Ctrl+N: 新規ターミナル
+  if (isNewTerminalKey(e, isMac)) {
     e.preventDefault();
     e.stopPropagation();
     postMessage({ type: 'requestFolderPicker' });

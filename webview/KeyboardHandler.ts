@@ -1,5 +1,5 @@
 import { isSendNowKey } from './claudeKeys';
-import { isPanelActionKey } from './panelKeys';
+import { isPanelActionKey, isNewTerminalKey } from './panelKeys';
 
 export class KeyboardHandler {
   private postMessage: (msg: unknown) => void;
@@ -88,8 +88,8 @@ export class KeyboardHandler {
         return false;
       }
 
-      // ⌘N / Ctrl+Shift+N: 新規ターミナル（フォルダーピッカー）
-      if (isPanelActionKey(e, this.isMac, 'n')) {
+      // ⌘N / Ctrl+N: 新規ターミナル（フォルダーピッカー）
+      if (isNewTerminalKey(e, this.isMac)) {
         this.postMessage({ type: 'requestFolderPicker' });
         return false;
       }

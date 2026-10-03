@@ -24,7 +24,7 @@ A VS Code extension that manages multiple terminals in a grid layout.
 
 | Action / 操作 | macOS | Windows/Linux |
 |---------------|-------|---------------|
-| New terminal / 新規ターミナル | `Cmd+N` | `Ctrl+Shift+N` |
+| New terminal / 新規ターミナル | `Cmd+N` | `Ctrl+N` |
 | Close terminal / ターミナルを閉じる | `Cmd+W` | `Ctrl+Shift+W` |
 | Open in VS Code terminal / VSCodeターミナルで開く | `Cmd+T` | `Ctrl+Shift+T` |
 | Open in file explorer / Finder・エクスプローラーで開く | `Cmd+F` | `Ctrl+Shift+F` |
