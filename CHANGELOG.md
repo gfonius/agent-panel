@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.0.9] - 2026-11-21
+
+### Fixed / 修正
+- VS Code 1.147 (Chromium 150): terminal glyphs were drawn at about half size, leaving wide gaps between characters / VS Code 1.147 (Chromium 150) でターミナルの字が約半分の大きさで描かれ、字間がスカスカに見える問題
+  - Chromium 150 rejects canvas font strings with a leading space, which xterm.js builds for the WebGL glyph atlas; the webview now trims them / 先頭に空白がある canvas のフォント指定を Chromium 150 が捨てるため、webview で前後の空白を落としてから渡す
+
 ### Changed / 変更
 - Windows/Linux: new terminal is back to Ctrl+N (Close/VS Code terminal/Explorer stay on Ctrl+Shift) / Windows/Linux: 新規ターミナルを Ctrl+N に戻す (閉じる/VSCodeターミナル/エクスプローラーは Ctrl+Shift のまま)
 
