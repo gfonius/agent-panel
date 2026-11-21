@@ -263,10 +263,16 @@ describe('KeyboardHandler', () => {
         expect(openExplorer).toHaveBeenCalledOnce();
       });
 
-      it('Ctrl+Shift+N → returns false and posts requestFolderPicker', () => {
-        const e = makeEvent({ ctrlKey: true, shiftKey: true, key: 'N' });
+      it('Ctrl+N → returns false and posts requestFolderPicker', () => {
+        const e = makeEvent({ ctrlKey: true, key: 'n' });
         expect(handler(e)).toBe(false);
         expect(postMessage).toHaveBeenCalledWith({ type: 'requestFolderPicker' });
+      });
+
+      it('Ctrl+Shift+N → passes to terminal', () => {
+        const e = makeEvent({ ctrlKey: true, shiftKey: true, key: 'N' });
+        expect(handler(e)).toBe(true);
+        expect(postMessage).not.toHaveBeenCalled();
       });
     });
 
@@ -323,9 +329,9 @@ describe('Windows/Linux panel keys (Ctrl+Shift)', () => {
     expect(closeFocused).not.toHaveBeenCalled();
   });
 
-  it('Ctrl+T / Ctrl+F / Ctrl+N → pass to terminal', () => {
+  it('Ctrl+T / Ctrl+F → pass to terminal', () => {
     const { handler, openVscodeTerminal, openExplorer, postMessage } = createHandler(false);
-    for (const key of ['t', 'f', 'n']) {
+    for (const key of ['t', 'f']) {
       expect(handler(makeEvent({ ctrlKey: true, key }))).toBe(true);
     }
     expect(openVscodeTerminal).not.toHaveBeenCalled();
@@ -333,11 +339,11 @@ describe('Windows/Linux panel keys (Ctrl+Shift)', () => {
     expect(postMessage).not.toHaveBeenCalled();
   });
 
-  it('Ctrl+Shift+T / F / N → panel actions', () => {
+  it('Ctrl+Shift+T / F / Ctrl+N → panel actions', () => {
     const { handler, openVscodeTerminal, openExplorer, postMessage } = createHandler(false);
     expect(handler(makeEvent({ ctrlKey: true, shiftKey: true, key: 'T' }))).toBe(false);
     expect(handler(makeEvent({ ctrlKey: true, shiftKey: true, key: 'F' }))).toBe(false);
-    expect(handler(makeEvent({ ctrlKey: true, shiftKey: true, key: 'N' }))).toBe(false);
+    expect(handler(makeEvent({ ctrlKey: true, key: 'n' }))).toBe(false);
     expect(openVscodeTerminal).toHaveBeenCalled();
     expect(openExplorer).toHaveBeenCalled();
     expect(postMessage).toHaveBeenCalledWith({ type: 'requestFolderPicker' });
