@@ -1,5 +1,6 @@
 import './styles/main.css';
 import '@xterm/xterm/css/xterm.css';
+import { installCanvasFontFix } from './canvasFontFix';
 import { BaseScreen } from './BaseScreen';
 import { TerminalPane } from './TerminalPane';
 import { TerminalGrid } from './TerminalGrid';
@@ -10,7 +11,7 @@ import { setLocale as setI18nLocale, t } from './i18n';
 import { reorderPaneIds } from './paneOrderUtils';
 import { extractFilePaths } from './fileDropUtils';
 import { isSendNowKey, SEND_NOW_SEQUENCE } from './claudeKeys';
-import { isPanelActionKey } from './panelKeys';
+import { isPanelActionKey, isNewTerminalKey } from './panelKeys';
 import type { HostToWebviewMessage, WebviewToHostMessage } from '../src/protocol/messages';
 
 declare function acquireVsCodeApi(): {
@@ -18,6 +19,9 @@ declare function acquireVsCodeApi(): {
   getState(): unknown;
   setState(state: unknown): void;
 };
+
+// xterm の WebGL 文字テクスチャが Chromium 150 で 10px になる問題の補正 (ターミナル生成より前に)
+installCanvasFontFix();
 
 const vscode = acquireVsCodeApi();
 const app = document.getElementById('app')!;
@@ -535,8 +539,8 @@ document.addEventListener('keydown', (e: KeyboardEvent) => {
     return;
   }
 
-  // ⌘N / Ctrl+Shift+N: 新規ターミナル
-  if (isPanelActionKey(e, isMac, 'n')) {
+  // ⌘N / Ctrl+N: 新規ターミナル
+  if (isNewTerminalKey(e, isMac)) {
     e.preventDefault();
     e.stopPropagation();
     postMessage({ type: 'requestFolderPicker' });

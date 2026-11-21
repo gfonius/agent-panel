@@ -122,7 +122,7 @@
     "keybindings": [
       {
         "command": "agentPanel.newTerminal",
-        "key": "ctrl+shift+n",
+        "key": "ctrl+n",
         "mac": "cmd+n",
         "when": "agentPanel.active"
       },

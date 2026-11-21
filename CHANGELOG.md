@@ -1,5 +1,10 @@
 # Changelog / 変更履歴
 
+## [Unreleased]
+
+### Changed / 変更
+- Windows/Linux: new terminal is back to Ctrl+N (Close/VS Code terminal/Explorer stay on Ctrl+Shift) / Windows/Linux: 新規ターミナルを Ctrl+N に戻す (閉じる/VSCodeターミナル/エクスプローラーは Ctrl+Shift のまま)
+
 ## [0.0.8] - 2026-09-29
 
 ### Added / 追加
