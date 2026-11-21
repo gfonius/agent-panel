@@ -1,5 +1,6 @@
 import './styles/main.css';
 import '@xterm/xterm/css/xterm.css';
+import { installCanvasFontFix } from './canvasFontFix';
 import { BaseScreen } from './BaseScreen';
 import { TerminalPane } from './TerminalPane';
 import { TerminalGrid } from './TerminalGrid';
@@ -18,6 +19,9 @@ declare function acquireVsCodeApi(): {
   getState(): unknown;
   setState(state: unknown): void;
 };
+
+// xterm の WebGL 文字テクスチャが Chromium 150 で 10px になる問題の補正 (ターミナル生成より前に)
+installCanvasFontFix();
 
 const vscode = acquireVsCodeApi();
 const app = document.getElementById('app')!;
