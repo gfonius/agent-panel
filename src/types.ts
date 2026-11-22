@@ -13,6 +13,8 @@ export interface SavedState {
 
 export interface RateLimitWindow {
   key: string;
+  /** API が名前を返した枠 (limits[].scope) の表示名。無ければ RATE_LIMIT_LABELS → key の順で決める */
+  label?: string;
   utilization: number;
   resetsAt: string | null;
   limitDollars?: number;

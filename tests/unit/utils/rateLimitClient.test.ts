@@ -674,3 +674,67 @@ describe('fetchRateLimitInfo', () => {
     }
   });
 });
+
+describe('fetchRateLimitInfo: limits[] (scoped windows)', () => {
+  // 2026-11 の実 API の形: Fable の枠は nimbus_quill / cinder_cove が null で、limits[] の weekly_scoped に入る
+  const NOV_2026_RESPONSE = {
+    five_hour: null,
+    seven_day: { utilization: 28, resets_at: '2026-11-27T14:00:00.906615+00:00', limit_dollars: null, used_dollars: null, remaining_dollars: null },
+    nimbus_quill: null,
+    cinder_cove: null,
+    limits: [
+      { kind: 'weekly_all', group: 'weekly', percent: 28, resets_at: '2026-11-27T14:00:00.906615+00:00', scope: null, is_active: false },
+      { kind: 'weekly_scoped', group: 'weekly', percent: 39, resets_at: '2026-11-27T14:00:00.906744+00:00', scope: { model: { id: null, display_name: 'Fable' }, surface: null }, is_active: true },
+    ],
+  };
+
+  it('reads a model-scoped limit as a window labelled with its display name', async () => {
+    global.fetch = makeFetchResponse(true, NOV_2026_RESPONSE) as typeof fetch;
+    const { fetchRateLimitInfo } = await setupModule({ execSyncImpl: () => VALID_CREDENTIALS });
+    const result = await fetchRateLimitInfo();
+
+    expect(result!.windows.map((w) => w.key)).toEqual(['seven_day', 'limits:weekly_scoped:Fable']);
+    expect(result!.windows[1]).toMatchObject({ label: 'Fable', utilization: 39, resetsAt: '2026-11-27T14:00:00.906744+00:00' });
+  });
+
+  it('does not read the unscoped weekly_all limit (it duplicates seven_day)', async () => {
+    global.fetch = makeFetchResponse(true, NOV_2026_RESPONSE) as typeof fetch;
+    const { fetchRateLimitInfo } = await setupModule({ execSyncImpl: () => VALID_CREDENTIALS });
+    const result = await fetchRateLimitInfo();
+
+    expect(result!.windows.filter((w) => w.key.includes('weekly_all'))).toHaveLength(0);
+  });
+
+  it('does not show Fable twice when the legacy nimbus_quill window is also present', async () => {
+    global.fetch = makeFetchResponse(true, {
+      ...NOV_2026_RESPONSE,
+      nimbus_quill: { utilization: 39, resets_at: '2026-11-27T14:00:00Z' },
+    }) as typeof fetch;
+    const { fetchRateLimitInfo } = await setupModule({ execSyncImpl: () => VALID_CREDENTIALS });
+    const result = await fetchRateLimitInfo();
+
+    expect(result!.windows.map((w) => w.key)).toEqual(['seven_day', 'nimbus_quill']);
+  });
+
+  it('uses the surface display name when the scope has no model', async () => {
+    global.fetch = makeFetchResponse(true, {
+      seven_day: { utilization: 10, resets_at: null },
+      limits: [{ kind: 'weekly_scoped', percent: 5, resets_at: null, scope: { model: null, surface: { display_name: 'Cowork' } } }],
+    }) as typeof fetch;
+    const { fetchRateLimitInfo } = await setupModule({ execSyncImpl: () => VALID_CREDENTIALS });
+    const result = await fetchRateLimitInfo();
+
+    expect(result!.windows[1]).toMatchObject({ key: 'limits:weekly_scoped:Cowork', label: 'Cowork', utilization: 5, resetsAt: null });
+  });
+
+  it('skips limit entries without a numeric percent', async () => {
+    global.fetch = makeFetchResponse(true, {
+      seven_day: { utilization: 10, resets_at: null },
+      limits: [{ kind: 'weekly_scoped', percent: null, scope: { model: { display_name: 'Fable' } } }, null, 'x'],
+    }) as typeof fetch;
+    const { fetchRateLimitInfo } = await setupModule({ execSyncImpl: () => VALID_CREDENTIALS });
+    const result = await fetchRateLimitInfo();
+
+    expect(result!.windows.map((w) => w.key)).toEqual(['seven_day']);
+  });
+});
