@@ -1,10 +1,16 @@
 import { getDefaultShell, getShellArgs, getCommandLineEnding } from '../utils/platform';
 import { parseResumeId } from '../utils/sessionParser';
 import { createStatusDetector, type TerminalStatus } from '../utils/statusDetector';
+import { ensureSpawnHelperExecutable } from '../utils/ensureSpawnHelper';
 
 // node-ptyはネイティブモジュールのため遅延読み込み
 // トップレベルimportだとElectronとのABI不一致で拡張が起動しない
+let spawnHelperChecked = false;
 function loadNodePty(): typeof import('node-pty') {
+  if (!spawnHelperChecked) {
+    spawnHelperChecked = true;
+    ensureSpawnHelperExecutable();
+  }
   return require('node-pty');
 }
 
