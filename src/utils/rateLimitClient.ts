@@ -1,5 +1,5 @@
 import { ExtraUsage, RateLimitInfo, RateLimitWindow } from '../types';
-import { RATE_LIMIT_CACHE_TTL, RATE_LIMIT_ORDER } from '../constants';
+import { RATE_LIMIT_CACHE_TTL, RATE_LIMIT_LABELS, RATE_LIMIT_ORDER } from '../constants';
 import { execSync } from 'child_process';
 import * as os from 'os';
 import * as path from 'path';
@@ -92,7 +92,57 @@ function parseWindows(data: Record<string, unknown>): RateLimitWindow[] {
     .sort((a, b) => orderIndex.get(a.key)! - orderIndex.get(b.key)!);
   const unknown = windows.filter((w) => !orderIndex.has(w.key));
 
-  return [...known, ...unknown];
+  // 旧来の枠と同じ表示名のものは二重に出さない
+  const shownLabels = new Set(known.map((w) => RATE_LIMIT_LABELS[w.key]));
+  const scoped = parseScopedLimits(data).filter((w) => !shownLabels.has(w.label));
+
+  return [...known, ...scoped, ...unknown];
+}
+
+function scopeDisplayName(scope: unknown): string | null {
+  if (scope === null || typeof scope !== 'object') {
+    return null;
+  }
+  for (const part of ['model', 'surface'] as const) {
+    const name = ((scope as Record<string, unknown>)[part] as Record<string, unknown> | null | undefined)?.display_name;
+    if (typeof name === 'string' && name !== '') {
+      return name;
+    }
+  }
+  return null;
+}
+
+/**
+ * `limits` 配列のうち対象が絞られた枠 (scope にモデル名や面の名前があるもの) を枠として読む。
+ * 2026-11 時点で Fable の週枠は nimbus_quill / cinder_cove が null になり、
+ * `{ kind: 'weekly_scoped', percent, resets_at, scope: { model: { display_name: 'Fable' } } }` で返る。
+ * scope の無い全体枠 (weekly_all など) は five_hour / seven_day と重なるので読まない。
+ */
+function parseScopedLimits(data: Record<string, unknown>): Array<RateLimitWindow & { label: string }> {
+  const raw = data.limits;
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+  const result: Array<RateLimitWindow & { label: string }> = [];
+  const seen = new Set<string>();
+  for (const entry of raw) {
+    if (entry === null || typeof entry !== 'object') {
+      continue;
+    }
+    const e = entry as Record<string, unknown>;
+    const label = scopeDisplayName(e.scope);
+    if (!label || typeof e.percent !== 'number' || seen.has(label)) {
+      continue;
+    }
+    seen.add(label);
+    result.push({
+      key: `limits:${typeof e.kind === 'string' ? e.kind : 'scoped'}:${label}`,
+      label,
+      utilization: e.percent,
+      resetsAt: typeof e.resets_at === 'string' ? e.resets_at : null,
+    });
+  }
+  return result;
 }
 
 const ISO_4217_ALPHA_RE = /^[A-Za-z]{3}$/;

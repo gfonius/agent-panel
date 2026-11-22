@@ -120,7 +120,7 @@ export class RateLimitBar {
 
     const label = document.createElement('span');
     label.className = 'rate-limit-bar__label';
-    label.textContent = RATE_LIMIT_LABELS[win.key] ?? win.key;
+    label.textContent = win.label ?? RATE_LIMIT_LABELS[win.key] ?? win.key;
 
     const track = document.createElement('div');
     track.className = 'rate-limit-bar__track';
