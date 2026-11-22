@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.0.10] - 2026-11-22
+
+### Fixed / 修正
+- Fable usage was not shown: the usage API now returns model-scoped quotas in `limits[]` instead of `nimbus_quill` / `cinder_cove` / Fable の使用量が出ない問題 (使用量 API がモデル別の枠を `nimbus_quill` / `cinder_cove` ではなく `limits[]` で返すようになったため)
+  - Scoped limits are shown with the display name the API returns; the unscoped weekly limit is not shown twice / API が返す表示名をラベルにして出す。全体の週枠 (7d と同じ) は二重に出さない
+
 ## [0.0.9] - 2026-11-21
 
 ### Fixed / 修正
