@@ -11,9 +11,9 @@
   - webpack では node-pty が external なので、場所は `__non_webpack_require__` で解決する
 
 ## リリース作業
-- [ ] package.json バージョン 0.0.11
-- [ ] CHANGELOG.md 更新
-- [ ] develop / main へマージ、タグ v0.0.11
+- [x] package.json バージョン 0.0.11
+- [x] CHANGELOG.md 更新
+- [x] develop / main へマージ、タグ v0.0.11
 - [ ] .vsix パッケージ生成 (Mac で作る。先に `npx webpack --mode production`。`vsce package` はビルドしない)
 - [ ] VS Code に入れて実機確認
 
