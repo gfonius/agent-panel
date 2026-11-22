@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.0.11] - 2026-11-22
+
+### Fixed / 修正
+- macOS: terminals could not be created (`posix_spawnp failed`) / macOS でターミナルを作れない問題 (`posix_spawnp failed`)
+  - node-pty ships `prebuilds/darwin-*/spawn-helper` without the execute bit; it is used when the .vsix has no macOS build in `build/Release` (e.g. packaged on Windows). The extension now adds the execute bit before the first terminal starts / node-pty の `prebuilds/darwin-*/spawn-helper` は配布時点で実行権限がなく、`build/Release` に Mac 用が無い .vsix (Windows で作ったもの等) ではこちらが使われる。最初のターミナルを作る前に実行権限を付ける
+
 ## [0.0.10] - 2026-11-22
 
 ### Fixed / 修正

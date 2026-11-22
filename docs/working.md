@@ -1,15 +1,21 @@
-# v0.0.10 リリース
+# v0.0.11 リリース
 
 ## 完了済みfeature
-- [x] fix/fable-usage-limits — Fable の使用量が出ない (API が limits[] に枠を移した)
-- (v0.0.9) feature/windows-ctrl-n — Windows/Linux の新規ターミナルを Ctrl+N に戻す
-- (v0.0.9) fix/webgl-canvas-font — VS Code 1.147 (Chromium 150) で WebGL の字が約半分の大きさになる問題
+- [x] feature/spawn-helper-permission — macOS でターミナルを作れない (`posix_spawnp failed`)
+  - node-pty の `prebuilds/darwin-*/spawn-helper` は配布物の時点で 644 (実行権限なし)
+  - Mac で vsix を作ると `build/Release/spawn-helper` (755) が入るので表に出なかった。
+    Windows で作った v0.0.10 は `build/Release` に conpty しか無く、prebuilds 側を使って落ちた
+  - `loadNodePty()` の初回に `src/utils/ensureSpawnHelper.ts` で
+    `prebuilds/<platform>-<arch>/spawn-helper` と `build/Release/spawn-helper` に実行権限を付ける。
+    win32 は何もしない。失敗しても console.warn だけでターミナル作成は続ける
+  - webpack では node-pty が external なので、場所は `__non_webpack_require__` で解決する
 
 ## リリース作業
-- [x] package.json バージョン 0.0.10
+- [x] package.json バージョン 0.0.11
 - [x] CHANGELOG.md 更新
-- [x] develop / main へマージ、タグ v0.0.10
-- [x] .vsix パッケージ生成 (先に `npx webpack --mode production`。`vsce package` はビルドしない)
+- [x] develop / main へマージ、タグ v0.0.11
+- [ ] .vsix パッケージ生成 (Mac で作る。先に `npx webpack --mode production`。`vsce package` はビルドしない)
+- [ ] VS Code に入れて実機確認
 
 ## 未リリース・持ち越し
 - fix/resize-observer-loop — develop と3ファイルでコンフリクト（6ヶ月前のブランチ）。要手動統合
